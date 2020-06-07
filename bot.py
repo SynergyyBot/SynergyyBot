@@ -10,5 +10,9 @@ client = commands.Bot(command_prefix='!')
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
+@client.command()
+async def ping(ctx):
+    await ctx.send(f'Pong! {round(client.latency*1000)}ms')
+
 #Client Token (removed for security reasons)
 client.run('TOKEN')
