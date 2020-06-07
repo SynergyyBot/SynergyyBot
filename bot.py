@@ -3,6 +3,7 @@ from discord.ext import commands, tasks, timers
 import random
 import datetime
 
+timescales = ['sec', 'seconds', 'min', 'mins', 'minute', 'minutes', 'hour', 'hours', 'day', 'days', 'week', 'weeks', 'month', 'months', 'year'] # right now only supports up to week
 client = commands.Bot(command_prefix='!')
 client.remove_command("help")
 
@@ -42,6 +43,40 @@ async def help(ctx):
     embed.set_footer(text="All commands can be invoked using !")
 
     await ctx.send(embed=embed)
+
+@client.command() #Meeting Creation Command
+async def meeting(ctx, *, information):
+    error_card = discord.Embed(title='Missing Meeting Time', colour=discord.Color.green())
+    info = information.strip().split()
+    for i in range(len(info)):
+        for j in range(len(timescales)):
+            #If user requests a meeting 'IN' a certain amount of time
+            if timescales[j] in info[i] and i > 1 and info[i-1].isnumeric():
+                name = information[:information.index(info[i-1])] if info[i-2] != 'in' else information[:information.rindex(' in ')]
+                now = datetime.datetime.now().timestamp()
+                m_time = 0
+                if j == 0 or j == 1:
+                    m_time = now + int(info[i-1])
+                elif j == 2 or j == 3:
+                    m_time = now + int(info[i-1]) * 60
+                elif j == 4:
+                    m_time = now + int(info[i-1]) * 3600
+                elif j == 5:
+                    m_time = now + int(info[i-1]) * 86400
+                elif j == 6:
+                    m_time = now + int(info[i-1]) * 604800
+                time = datetime.datetime.fromtimestamp(m_time).strftime('%-I:%M%p')
+                date = datetime.datetime.fromtimestamp(m_time).strftime('%A, %b %-d, %Y')
+
+                #Create embed
+                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
+                meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
+                #meeting_card.set_footer(text=f"Send this message to opt-in to reminders: !remind {date} {time} {name}")
+                await ctx.send(content=None, embed=meeting_card)
+
+                # time.sleep(m_time - now)
+                # reminder = discord.Embed(title=f"Reminder: {name}", colour=discord.Colour.green())
+                # await ctx.author.send(content=None, embed=reminder)
 
 #Bot Token Pairing--------------------------------
 client.run('TOKEN')
