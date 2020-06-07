@@ -38,8 +38,9 @@ async def help(ctx):
     embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
-    embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.', inline=False)
-    #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
+    embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.\n    eg. !clear 10', inline=False)
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\n    eg. !meeting Physics Project in 2 hours', inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.filler.com/) for more help!", inline=False)
     embed.set_footer(text="All commands can be invoked using !")
 
     await ctx.send(embed=embed)
