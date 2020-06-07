@@ -38,7 +38,7 @@ async def help(ctx):
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.', inline=False)
-    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
+    #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
     embed.set_footer(text="All commands can be invoked using !")
 
     await ctx.send(embed=embed)
