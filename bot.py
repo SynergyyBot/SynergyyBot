@@ -14,5 +14,9 @@ async def on_ready():
 async def ping(ctx):
     await ctx.send(f'Pong! {round(client.latency*1000)}ms')
 
+@client.command()
+async def clearmssg(ctx, amount=5):
+    await ctx.channel.purge(limit=amount)
+
 #Client Token (removed for security reasons)
 client.run('TOKEN')
