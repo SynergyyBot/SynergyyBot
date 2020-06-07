@@ -18,5 +18,12 @@ async def ping(ctx):
 async def clearmssg(ctx, amount=5):
     await ctx.channel.purge(limit=amount)
 
+@client.command()
+async def helpme(ctx):
+    card = discord.Embed(title="Bot Help", description="Below are some useful commands", colour=discord.Colour.green())
+    card.add_field(name="!ping", value="Returns the latency of the bot")
+    card.add_field(name="!clearmmsg n", value="Clears previous n messages")
+    await ctx.send(content=None, embed=card)
+
 #Client Token (removed for security reasons)
 client.run('TOKEN')
