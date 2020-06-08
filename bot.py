@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands, tasks, timers
 import random
 import datetime
+import asyncio
 
 timescales = ['sec', 'seconds', 'min', 'mins', 'minute', 'minutes', 'hour', 'hours', 'day', 'days', 'week', 'weeks', 'month', 'months', 'year'] # right now only supports up to week
 client = commands.Bot(command_prefix='!')
@@ -72,12 +73,20 @@ async def meeting(ctx, *, information):
                 #Create embed
                 meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-                #meeting_card.set_footer(text=f"Send this message to opt-in to reminders: !remind {date} {time} {name}")
+                meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
                 await ctx.send(content=None, embed=meeting_card)
 
-                # time.sleep(m_time - now)
-                # reminder = discord.Embed(title=f"Reminder: {name}", colour=discord.Colour.green())
-                # await ctx.author.send(content=None, embed=reminder)
+                await asyncio.sleep(m_time-now)
+                reminder_card = discord.Embed(
+                colour = discord.Colour.green(),
+                )
+                reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
+                #reminder_card.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
+                await ctx.author.send(content=None, embed=reminder_card)
+
+                announce = discord.Embed(colour=discord.Colour.green())
+                announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
+                await ctx.send(embed=announce)
 
 
 #Bot Token Pairing--------------------------------
