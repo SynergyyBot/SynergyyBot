@@ -81,7 +81,6 @@ async def meeting(ctx, *, information):
                 colour = discord.Colour.green(),
                 )
                 reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
-                #reminder_card.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
                 await ctx.author.send(content=None, embed=reminder_card)
 
                 announce = discord.Embed(colour=discord.Colour.green())
