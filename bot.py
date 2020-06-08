@@ -3,8 +3,10 @@ import os
 import datetime
 import time
 import threading
+import asyncio
 from discord.ext import commands, tasks
 from word2number import w2n
+from dateutil.parser import parse
 
 client = commands.Bot(command_prefix='!')
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
@@ -15,13 +17,7 @@ timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
 
-#Error Handling----------------------------
-
-@client.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):
-        command_not_found = discord.Embed(title="Command Not Found", description="Use !helpme to see the list of commands.", colour=discord.Colour.green())
-        await ctx.send(content=None, embed=command_not_found)
+#Commands----------------------------------
 
 @client.command()
 async def ping(ctx):
@@ -42,22 +38,28 @@ async def helpme(ctx):
 async def meeting(ctx, *, information):
     info = information.strip().split()
     name = time = date = ''
+    in_condition = True
 
     for i in range(len(info)):
         for j in range(len(timescales)):
             #If user requests a meeting IN a certain amount of time
-            if timescales[j] in info[i] and i > 1:
+            if timescales[j] in info[i].lower() and i >= 1:
+                in_condition = False
+
                 #(!meeting name in # timescale)
                 if info[i-1].isnumeric():
                     t = int(info[i-1])
+                    name = information[:information.index(info[i-1])] if info[i-2] != 'in' else information[:information.rindex(' in ')]
                 #(!meeting name in #timescale)
-                elif info[i][:info[i].index(timescales[j])].isnumeric():
-                    t = int(info[i][:info[i].index(timescales[j])])
+                elif info[i].lower()[:info[i].lower().index(timescales[j])].isnumeric():
+                    t = int(info[i].lower()[:info[i].lower().index(timescales[j])])
+                    name = information[:information.index(info[i])] if info[i-1] != 'in' else information[:information.rindex(' in ')]
                 #(!meeting name in word# timescale)
                 else:
                     t = w2n.word_to_num(info[i-1])
+                    name = information[:information.index(info[i-1])] if info[i-2] != 'in' else information[:information.rindex(' in ')]
                 
-                name = information[:information.index(info[i-1])] if info[i-2] != 'in' else information[:information.rindex(' in ')]
+                name = name.strip('\"')
                 now = datetime.datetime.now().timestamp()
                 m_time = 0
                 if j == 0 or j == 1:
@@ -77,7 +79,39 @@ async def meeting(ctx, *, information):
                 meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
                 await ctx.send(content=None, embed=meeting_card)
+    
+    if in_condition:
+        if '\"' in information:
+            name = information[information.index('\"')+1 : information.rindex('\"')]
+            if has_date(information[information.rindex('\"')+1:]):
+                d = parse(information[information.rindex('\"')+1:])
+                time = d.strftime('%-I:%M%p')
+                date = d.strftime('%A, %b %-d, %Y')
 
+                #Create embed
+                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
+                meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
+                await ctx.send(content=None, embed=meeting_card)
+
+
+
+#Other Functions--------------------------
+
+def has_date(string, fuzzy=True):
+    try: 
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+
+#Error Handling----------------------------
+
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        command_not_found = discord.Embed(title="Command Not Found", description="Use !helpme to see the list of commands.", colour=discord.Colour.green())
+        await ctx.send(content=None, embed=command_not_found)
 
 #Meeting Error------------------------------------
 @meeting.error
@@ -88,5 +122,6 @@ async def meeting_error(ctx, error):
     else:
         await ctx.send(content=None, embed=error_card)
 
+
 #Client Token (removed for security reasons)
-client.run('TOKEN')
+client.run('NzE3NDMyMzc0OTY2ODc4MjM4.Xt5mVA.3-2_lYI6CfvSorSMwSV4trWQC1w')
