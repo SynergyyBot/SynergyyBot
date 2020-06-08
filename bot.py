@@ -87,6 +87,30 @@ async def meeting(ctx, *, information):
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
 
+@client.command()
+async def poll(ctx, title, option1, option2, option3, polltimeinminutes: int):
+
+    options = {"🇦": option1, "🇧": option2,"🇨": option3}
+    vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green())
+    value = "\n".join("{} - {}".format(*item) for item in options.items())
+    vote.add_field(name="Options:", value=value, inline=False)
+    vote.set_footer(text="Time to vote: %s minutes.\nUse the reactions below to vote." % (polltimeinminutes))
+
+    message_1 = await ctx.send(embed=vote)
+    for choice in options:
+        await message_1.add_reaction(emoji=choice)
+
+    polltimeinminutes *= 60
+    await asyncio.sleep(polltimeinminutes)
+    message_1 = await ctx.fetch_message(message_1.id)
+
+    counts = {react.emoji: react.count for react in message_1.reactions}
+    winner = max(options, key=counts.get)
+
+    winner_card = discord.Embed(color=discord.Colour.green())
+    winner_card.set_author(name="\U00002B50 The winner of the poll \'%s\' is \'%s\'!" % (title, options[winner]))
+
+    await ctx.send(embed=winner_card)
 
 #Bot Token Pairing--------------------------------
 client.run('TOKEN')
