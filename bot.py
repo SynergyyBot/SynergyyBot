@@ -75,5 +75,15 @@ async def meeting(ctx, *, information):
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
                 await ctx.send(content=None, embed=meeting_card)
 
+
+#Meeting Error------------------------------------
+@meeting.error
+async def meeting_error(ctx, error):
+    error_card = discord.Embed(title='Missing Meeting Time', colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=error_card)
+    else:
+        await ctx.send(content=None, embed=error_card)
+
 #Client Token (removed for security reasons)
 client.run('TOKEN')
