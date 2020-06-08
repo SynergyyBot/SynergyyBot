@@ -124,4 +124,4 @@ async def meeting_error(ctx, error):
 
 
 #Client Token (removed for security reasons)
-client.run('NzE3NDMyMzc0OTY2ODc4MjM4.Xt5mVA.3-2_lYI6CfvSorSMwSV4trWQC1w')
+client.run('TOKEN')
