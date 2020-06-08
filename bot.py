@@ -41,6 +41,7 @@ async def help(ctx):
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.\n    eg. !clear 10', inline=False)
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n    eg. !meeting Physics Project in 2 hours', inline=False)
+    embed.add_field(name='!poll', value = 'Creates a new poll.\neg. !poll "Poll Title" option1 option2 option3 (time limit in minutes)\neg. !poll "Favourite Food?" Pizza Sushi Taco 3', inline=False)
     embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.filler.com/) for more help!", inline=False)
     embed.set_footer(text="All commands can be invoked using !")
 
