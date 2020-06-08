@@ -50,6 +50,9 @@ async def meeting(ctx, *, information):
                 #(!meeting name in # timescale)
                 if info[i-1].isnumeric():
                     t = int(info[i-1])
+                #(!meeting name in #timescale)
+                elif info[i][:info[i].index(timescales[j])].isnumeric():
+                    t = int(info[i][:info[i].index(timescales[j])])
                 #(!meeting name in word# timescale)
                 else:
                     t = w2n.word_to_num(info[i-1])
