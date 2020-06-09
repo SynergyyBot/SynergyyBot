@@ -28,6 +28,14 @@ async def clear(ctx, amount=10):
     amount = str(amount)
     await ctx.send(":white_check_mark: "+amount+" messages cleared!", delete_after=5)
 
+@client.command()
+async def flip(ctx):
+    choices = ["Heads", "Tails"]
+    rancoin = random.choice(choices)
+    #await ctx.send(f"The result was {rancoin}!")
+    coinflip_card = discord.Embed(colour = discord.Colour.green(), description=f"The result was **{rancoin}**!")
+    await ctx.send(embed=coinflip_card)
+
 @client.command(pass_context=True) # Custom Help Command
 async def help(ctx):
     author = ctx.message.author
