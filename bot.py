@@ -36,29 +36,29 @@ async def clear(ctx, amount=10):
     amount = str(amount)
     await ctx.send(":white_check_mark: "+amount+" messages cleared!", delete_after=5)
 
-@client.command()
+@client.command() #Coinflip Command
 async def flip(ctx):
     choices = ["Heads", "Tails"]
     rancoin = random.choice(choices)
-    #await ctx.send(f"The result was {rancoin}!")
     coinflip_card = discord.Embed(colour = discord.Colour.green(), description=f"The result was **{rancoin}**!")
     await ctx.send(embed=coinflip_card)
 
-@client.command(aliases=['8ball'])
+@client.command(aliases=['8ball']) #8ball Command
 async def _8ball(ctx, *, question):
     responses = ["It is certain.", "It is decidedly so.", "Without a doubt.", "Yes - definitely.", "You may rely on it.",
                 "As I see it, yes.", "Most likely.", "Outlook good.", "Yes.", "Signs point to yes.", "Reply hazy, try again.",
                 "Ask again later.", "Better not tell you now.", "Cannot predict now.", "Concentrate and ask again.",
                 "Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Very doubtful."]
+    _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
+    await ctx.send(embed=_8ball_card)
 
 @client.command(pass_context=True) # Custom Help Command
 async def help(ctx):
     author = ctx.message.author
-
+    
     embed = discord.Embed(
         colour = discord.Colour.green(),
     )
-
     embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\neg. !meeting Physics Project in 2 hours', inline=False)
@@ -261,7 +261,6 @@ async def poll5_error(ctx, error):
         await ctx.send(content=None, embed=arg_missing)
     else:
         await ctx.send(content=None, embed=format_error)
-#------------------------------------------
 
 #Bot Token Pairing--------------------------------
 client.run('TOKEN')
