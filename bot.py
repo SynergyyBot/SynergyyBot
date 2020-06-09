@@ -52,10 +52,19 @@ async def _8ball(ctx, *, question):
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
 
+@_8ball.error
+async def _8ball_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="You need to ask the 8ball a question!\neg. !8ball Am I cool?\n Please refer to !help for more info.", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description="Please follow this format: !8ball Am I cool?\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
+
 @client.command(pass_context=True) # Custom Help Command
 async def help(ctx):
     author = ctx.message.author
-    
+
     embed = discord.Embed(
         colour = discord.Colour.green(),
     )
