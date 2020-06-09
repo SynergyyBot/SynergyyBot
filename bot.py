@@ -32,11 +32,21 @@ async def ping(ctx):
     await ctx.send(f'Pong! My current latency is {round(client.latency*1000)}ms.')
 
 @client.command(pass_context=True) #Clear Messages Command
-async def clear(ctx, amount=10):
-    amount = int(amount)
-    await ctx.channel.purge(limit=amount+1)  
-    amount = str(amount)
-    await ctx.send(":white_check_mark: "+amount+" messages cleared!", delete_after=5)
+async def clear(ctx, amount=None): #IN HELP WRITE THAT THE DEFAULT IS 10!!
+    if amount.isnumeric():           
+        amount = int(amount)
+        await ctx.channel.purge(limit=amount+1)  
+        amount = str(amount)
+        await ctx.send(":white_check_mark: "+amount+" messages cleared!", delete_after=5)
+    else:
+        nonnumeric_card = discord.Embed(title="Error!", description="The value after !clear must be a number.\neg. !clear 50\nPlease refer to !help for more info.", colour=discord.Colour.green())
+        await ctx.send(embed=nonnumeric_card)
+
+@clear.error
+async def clear_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="You must specify a number of messages to clear!\neg. !clear 50\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
 
 @client.command() #Coinflip Command
 async def flip(ctx):
