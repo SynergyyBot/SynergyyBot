@@ -120,10 +120,12 @@ async def meeting_error(ctx, error):
     else:
         await ctx.send(content=None, embed=format_error)
 
+#Poll Commands----------------------------------------------------------------
 @client.command()
-async def poll(ctx, title, option1, option2, option3, polltimeinminutes: int):
+async def poll2(ctx, title, option1, option2, polltimeinminutes: int):
 
-    options = {"🇦": option1, "🇧": option2,"🇨": option3}
+    options = {"🇦": option1,
+                   "🇧": option2}
     vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green())
     value = "\n".join("{} - {}".format(*item) for item in options.items())
     vote.add_field(name="Options:", value=value, inline=False)
@@ -140,10 +142,87 @@ async def poll(ctx, title, option1, option2, option3, polltimeinminutes: int):
     counts = {react.emoji: react.count for react in message_1.reactions}
     winner = max(options, key=counts.get)
 
-    winner_card = discord.Embed(color=discord.Colour.green())
-    winner_card.set_author(name="\U00002B50 The winner of the poll \'%s\' is \'%s\'!" % (title, options[winner]))
+    winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
 
     await ctx.send(embed=winner_card)
 
+@client.command()
+async def poll3(ctx, title, option1, option2, option3, polltimeinminutes: int):
+
+    options = {"🇦": option1,
+                   "🇧": option2,
+                   "🇨": option3}
+    vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green())
+    value = "\n".join("{} - {}".format(*item) for item in options.items())
+    vote.add_field(name="Options:", value=value, inline=False)
+    vote.set_footer(text="Time to vote: %s minutes.\nUse the reactions below to vote." % (polltimeinminutes)) 
+
+    message_1 = await ctx.send(embed=vote)
+    for choice in options:
+        await message_1.add_reaction(emoji=choice)
+
+    polltimeinminutes *= 60
+    await asyncio.sleep(polltimeinminutes)
+    message_1 = await ctx.fetch_message(message_1.id)
+
+    counts = {react.emoji: react.count for react in message_1.reactions}
+    winner = max(options, key=counts.get)
+
+    winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
+
+    await ctx.send(embed=winner_card)
+
+@client.command()
+async def poll4(ctx, title, option1, option2, option3, option4, polltimeinminutes: int):
+
+    options = {"🇦": option1,
+                   "🇧": option2,
+                   "🇨": option3, "🇩": option4}
+    vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green())
+    value = "\n".join("{} - {}".format(*item) for item in options.items())
+    vote.add_field(name="Options:", value=value, inline=False)
+    vote.set_footer(text="Time to vote: %s minutes.\nUse the reactions below to vote." % (polltimeinminutes)) # You can delete this line if you want.
+
+    message_1 = await ctx.send(embed=vote)
+    for choice in options:
+        await message_1.add_reaction(emoji=choice)
+
+    polltimeinminutes *= 60
+    await asyncio.sleep(polltimeinminutes)
+    message_1 = await ctx.fetch_message(message_1.id)
+
+    counts = {react.emoji: react.count for react in message_1.reactions}
+    winner = max(options, key=counts.get)
+
+    winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner])) 
+
+    await ctx.send(embed=winner_card)
+
+@client.command()
+async def poll5(ctx, title, option1, option2, option3, option4, option5, polltimeinminutes: int):
+
+    options = {"🇦": option1,
+                   "🇧": option2,
+                   "🇨": option3, "🇩": option4, "🇪": option5}
+    vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green())
+    value = "\n".join("{} - {}".format(*item) for item in options.items())
+    vote.add_field(name="Options:", value=value, inline=False)
+    vote.set_footer(text="Time to vote: %s minutes.\nUse the reactions below to vote." % (polltimeinminutes))
+
+    message_1 = await ctx.send(embed=vote)
+    for choice in options:
+        await message_1.add_reaction(emoji=choice) 
+
+    polltimeinminutes *= 60
+    await asyncio.sleep(polltimeinminutes)
+    message_1 = await ctx.fetch_message(message_1.id)
+
+    counts = {react.emoji: react.count for react in message_1.reactions}
+    winner = max(options, key=counts.get)
+
+    winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
+
+    await ctx.send(embed=winner_card)
+    
 #Bot Token Pairing--------------------------------
 client.run('TOKEN')
