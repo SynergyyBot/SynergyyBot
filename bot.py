@@ -223,6 +223,45 @@ async def poll5(ctx, title, option1, option2, option3, option4, option5, polltim
     winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
 
     await ctx.send(embed=winner_card)
-    
+
+#Poll Error Handling----------------------------
+
+@poll2.error
+async def poll2_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="Please follow this format: !poll2 \"Title\" option1 option2 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description="Please follow this format: !poll2 \"Title\" option1 option2 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
+
+@poll3.error
+async def poll3_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="Please follow this format: !poll3 \"Title\" option1 option2 option3 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description="Please follow this format: !poll3 \"Title\" option1 option2 option3 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
+
+@poll4.error
+async def poll4_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="Please follow this format: !poll4 \"Title\" option1 option2 option3 option4 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description="Please follow this format: !poll4 \"Title\" option1 option2 option3 option4 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
+
+@poll5.error
+async def poll5_error(ctx, error):
+    arg_missing = discord.Embed(title='Missing Required Argument!', description="Please follow this format: !poll5 \"Title\" option1 option2 option3 option4 option5 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description="Please follow this format: !poll5 \"Title\" option1 option2 option3 option4 option5 1\n Please refer to !help for more info.", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=arg_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
+#------------------------------------------
+
 #Bot Token Pairing--------------------------------
 client.run('TOKEN')
