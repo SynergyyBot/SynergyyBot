@@ -15,6 +15,14 @@ async def on_ready():
     await client.change_presence(status=discord.Status.online, activity=discord.Game(" !help"))
     print('SynergyyBot is ready!')
 
+#Error Handling----------------------------
+
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        command_not_found = discord.Embed(title="Command Not Found :(", description="Use !help to see the list of commands and how to use them.", colour=discord.Colour.green())
+        await ctx.send(content=None, embed=command_not_found)
+
 #Commands-----------------------------------------
 
 @client.command() #Ping Command
@@ -102,6 +110,15 @@ async def meeting(ctx, *, information):
                 announce = discord.Embed(colour=discord.Colour.green())
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
+
+@meeting.error
+async def meeting_error(ctx, error):
+    time_missing = discord.Embed(title='Missing Meeting Time!', description="For further help, please refer to !help", colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting "Physics Project" in 2 hours', colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=time_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
 
 @client.command()
 async def poll(ctx, title, option1, option2, option3, polltimeinminutes: int):
