@@ -36,6 +36,8 @@ async def helpme(ctx):
 
 @client.command()
 async def meeting(ctx, *, information):
+    time_missing = discord.Embed(title='Missing Meeting Time!', colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting \"Physics Project\" in 2 hours', colour=discord.Color.green())
     info = information.strip().split()
     name = time = date = ''
     in_condition = True
@@ -89,10 +91,12 @@ async def meeting(ctx, *, information):
                 date = d.strftime('%A, %b %-d, %Y')
 
                 #Create embed
-                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
-                meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
+                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", name="Meeting Time", value=f"{time} on {date}", colour=discord.Colour.green())
                 await ctx.send(content=None, embed=meeting_card)
-
+            else:
+                await ctx.send(content=None, embed=time_missing)
+        else:
+            await ctx.send(content=None, embed=format_error)
 
 
 #Other Functions--------------------------
@@ -116,12 +120,13 @@ async def on_command_error(ctx, error):
 #Meeting Error------------------------------------
 @meeting.error
 async def meeting_error(ctx, error):
-    error_card = discord.Embed(title='Missing Meeting Time', colour=discord.Color.green())
+    time_missing = discord.Embed(title='Missing Meeting Time!', colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting \"Physics Project\" in 2 hours', colour=discord.Color.green())
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(content=None, embed=error_card)
+        await ctx.send(content=None, embed=time_missing)
     else:
-        await ctx.send(content=None, embed=error_card)
+        await ctx.send(content=None, embed=format_error)
 
 
 #Client Token (removed for security reasons)
-client.run('TOKEN')
+client.run('NzE3NDMyMzc0OTY2ODc4MjM4.Xt_qqA.vMqd06AhGLI-xa8H3iaDGX5k7Tk')
