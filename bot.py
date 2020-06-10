@@ -64,6 +64,26 @@ async def _8ball(ctx, *, question):
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
 
+@client.command
+async def pog(ctx):
+    pog_card = discord.Embed(colour = discord.Colour.green())
+    pog_card.set_image(url="https://cdn.discordapp.com/attachments/717853456244670509/720344286650040370/PogChamp.png")
+    await ctx.send(embed=pog_card)
+
+@client.command
+async def f(ctx):
+    f_card = discord.Embed(colour = discord.Colour.green())
+    f_card.set_image(url="https://cdn.discordapp.com/attachments/717853456244670509/720345633734787512/pressf.jpg")
+    await ctx.send(embed=f_card)
+
+@client.command()
+async def meme(ctx):
+    memes=["https://bit.ly/3cSmj3Y", "https://bit.ly/3fcPaSs", "https://bit.ly/3cStvNy", "https://bit.ly/3ffmWXd", "https://bit.ly/2YkpGM5",
+     "https://bit.ly/2YnYn3f", "https://bit.ly/2zpc8q8", "https://bit.ly/3fcwPVv", "https://bit.ly/3hbCOMd", "https://bit.ly/3f5FWam"]
+    meme_card = discord.Embed(colour = discord.Colour.green())
+    meme_card.set_image(url=random.choice(memes))
+    await ctx.send(embed=meme_card)
+
 @client.command(pass_context=True) #Custom Help Command
 async def help(ctx):
     embed = discord.Embed(colour = discord.Colour.green(),)
