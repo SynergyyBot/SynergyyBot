@@ -37,6 +37,7 @@ async def ping(ctx):
     await ctx.send(f'Pong! My current latency is {round(client.latency*1000)}ms.')
 
 @client.command(pass_context=True) #Clear Messages Command
+@commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount=None):
     if amount.isnumeric():           
         amount = int(amount)
@@ -152,7 +153,7 @@ async def meeting(ctx, *, information):
                 #Create embeds and Send
                 meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-                meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
+                meeting_card.set_footer(text=f"Tip: You will reminded about this meeting before it starts!")
 
                 await ctx.send(content=None, embed=meeting_card) 
                 await asyncio.sleep(m_time-now)
@@ -248,8 +249,13 @@ async def poll(ctx, *, information):
 @clear.error
 async def clear_error(ctx, error):
     arg_missing = discord.Embed(title='Missing Required Argument!', description="You must specify a number of messages to clear!\neg. !clear 50\n Please refer to !help for more info.", colour=discord.Color.green())
+    perms_missing = discord.Embed(title="Missing Permissions!", description="You must have the Manage Messages Permission to run this command.", colour=discord.Color.green())
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(content=None, embed=arg_missing)
+        await ctx.send(content=None, embed=arg_missing)  
+    elif isinstance(error, commands.MissingPermissions):
+        await ctx.send(content=None, embed=perms_missing)
+    else:
+        print(error)
 
 @_8ball.error
 async def _8ball_error(ctx, error):
