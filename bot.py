@@ -63,7 +63,7 @@ async def _8ball(ctx, *, question):
                 "Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Very doubtful."]
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
-
+    
 @client.command
 async def pog(ctx):
     pog_card = discord.Embed(colour = discord.Colour.green())
@@ -84,6 +84,13 @@ async def meme(ctx):
     meme_card.set_image(url=random.choice(memes))
     await ctx.send(embed=meme_card)
 
+@client.command()
+async def vote(ctx):
+    vote_card = discord.Embed(title="\U0001F3C6 Vote for Synergyy on Top.gg", description="Thanks for helping us grow!", colour = discord.Colour.green())
+    vote_card.add_field(name="Vote", value="[Click here to vote!](https://www.youtube.com)")
+    vote_card.set_footer(text="Tip: You can vote for us once every 12 hours.\nTip: Votes are worth double on weekends.")
+    await ctx.send(embed=vote_card)
+
 @client.command(pass_context=True) #Custom Help Command
 async def help(ctx):
     embed = discord.Embed(colour = discord.Colour.green(),)
@@ -92,6 +99,11 @@ async def help(ctx):
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
     embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.\n>>> eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
+    embed.add_field(name='!8ball', value = 'Asks the magical 8ball for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
+    embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
+    embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
+    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow!', inline=False)
+    #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
     embed.add_field(name='!8ball', value = 'Asks the magical 8ball for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
@@ -205,8 +217,8 @@ async def poll(ctx, *, information):
                 polltimeinminutes = int(information[information.rindex(j)+1:].strip())
                 break
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
-
-        if len(op) <= 26:
+        
+        if len(op) <= 20:
 
             options = {}
             for i in range(len(op)):
@@ -233,7 +245,7 @@ async def poll(ctx, *, information):
             await ctx.send(embed=winner_card)
         
         else:
-            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 26", color=discord.Colour.green())
+            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
             await ctx.send(embed=too_many_options)
 
 #Command Specific Error Handling--------------------------
