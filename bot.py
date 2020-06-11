@@ -216,7 +216,7 @@ async def poll(ctx, *, information):
                 break
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
 
-        if len(op) <= 26:
+        if len(op) <= 20:
 
             options = {}
             for i in range(len(op)):
@@ -243,7 +243,7 @@ async def poll(ctx, *, information):
             await ctx.send(embed=winner_card)
         
         else:
-            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 26", color=discord.Colour.green())
+            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
             await ctx.send(embed=too_many_options)
 
 #Command Specific Error Handling--------------------------
