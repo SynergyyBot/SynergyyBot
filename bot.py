@@ -95,13 +95,14 @@ async def vote(ctx):
 
 @client.command(pass_context=True) #Custom Help Command
 async def help(ctx):
-    embed = discord.Embed(colour = discord.Colour.green(),)
-    embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
+    embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
+    #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
-    embed.add_field(name='!clear (# of messages)', value = 'Clears messages from the current channel.\n>>> eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
-    embed.add_field(name='!8ball', value = 'Asks the magical 8ball for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
+    embed.add_field(name='!clear', value = 'Clears messages from the current channel.\n>>> Format: !clear (# of messages to clear)eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
+    embed.add_field(name='!8ball', value = 'Asks the magical 8bakll for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
+    embed.add_field(name='!list', value = 'Lists all upcoming events.', inline=False)
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
     embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow!', inline=False)
@@ -266,7 +267,7 @@ async def poll(ctx, *, information): #Poll command
 
 @client.command()
 async def list(ctx): #List command that lists all upcoming meetings
-    meetings_embed = discord.Embed(title="\U0001F4BC Upcoming Meetings", colour=discord.Colour.green())
+    meetings_embed = discord.Embed(title="\U0001F4CB Upcoming Meetings", colour=discord.Colour.green())
 
     #Accessing data
     db = sqlite3.connect('main.sqlite')
@@ -285,7 +286,7 @@ async def list(ctx): #List command that lists all upcoming meetings
             values.append(f"**{str(meetings[i])}** on {date} at {time}")
         meetings_embed.add_field(name="Meetings", value='>>> ' + '\n'.join(values))
     else:
-        meetings_embed.add_field(name="No upcoming meetings at this time", value="Use !meeting to create one!")
+        meetings_embed.add_field(name="No upcoming meetings.", value="Use !meeting to create one!\nRefer to !help for more info.")
 
     await ctx.send(embed=meetings_embed)
 
