@@ -113,7 +113,6 @@ async def help(ctx):
 async def meeting(ctx, *, information):
     info = information.strip().split()
     name = time = date = ''
-    in_condition = True
     time_missing = discord.Embed(title='Missing Meeting Time!', description="For further help, please refer to !help", colour=discord.Color.green())
     format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting "Physics Project" in 2 hours\nFor more info, please refer to !help', colour=discord.Color.green())
 
@@ -121,7 +120,6 @@ async def meeting(ctx, *, information):
         for j in range(len(timescales)):
             #If user requests a meeting IN a certain amount of time
             if timescales[j] in info[i].lower() and i >= 1:
-                in_condition = False
 
                 #(!meeting name in # timescale)
                 if info[i-1].isnumeric():
@@ -166,38 +164,38 @@ async def meeting(ctx, *, information):
 
                 announce = discord.Embed(colour=discord.Colour.green())
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
-                await ctx.send(embed=announce)           
-    
-    if in_condition:
-        if '"' in information:
-            name = information[information.index('"')+1 : information.rindex('"')]
-            if has_date(information[information.rindex('"')+1:]):
-                d = parse(information[information.rindex('"')+1:])
-                now = datetime.datetime.now().timestamp()
-                m_time = d.timestamp()
-                time = d.strftime('%-I:%M%p')
-                date = d.strftime('%A, %b %-d, %Y')
-
-                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
-                meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-                meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-
-                await ctx.send(content=None, embed=meeting_card)
-                await asyncio.sleep(m_time-now)
-
-                reminder_card = discord.Embed(colour = discord.Colour.green())
-                reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
-                
-                await ctx.author.send(content=None, embed=reminder_card)
-
-                announce = discord.Embed(colour=discord.Colour.green())
-                announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
+                return        
+    
+    if '"' in information:
+        name = information[information.index('"')+1 : information.rindex('"')]
+        if has_date(information[information.rindex('"')+1:]):
+            d = parse(information[information.rindex('"')+1:])
+            now = datetime.datetime.now().timestamp()
+            m_time = d.timestamp()
+            time = d.strftime('%-I:%M%p')
+            date = d.strftime('%A, %b %-d, %Y')
 
-            else:
-                await ctx.send(content=None, embed=time_missing)
+            meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
+            meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
+            meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
+
+            await ctx.send(content=None, embed=meeting_card)
+            await asyncio.sleep(m_time-now)
+
+            reminder_card = discord.Embed(colour = discord.Colour.green())
+            reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
+            
+            await ctx.author.send(content=None, embed=reminder_card)
+
+            announce = discord.Embed(colour=discord.Colour.green())
+            announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
+            await ctx.send(embed=announce)
+
         else:
-           await ctx.send(content=None, embed=format_error)
+            await ctx.send(content=None, embed=time_missing)
+    else:
+        await ctx.send(content=None, embed=format_error)
 
 @client.command()
 async def poll(ctx, *, information):
