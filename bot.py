@@ -264,6 +264,31 @@ async def poll(ctx, *, information): #Poll command
             too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
             await ctx.send(embed=too_many_options)
 
+@client.command()
+async def list(ctx): #List command that lists all upcoming meetings
+    meetings_embed = discord.Embed(title="\U0001F4BC Upcoming Meetings", colour=discord.Colour.green())
+
+    #Accessing data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
+    meetings = [meeting[0] for meeting in cursor.fetchall()]
+    cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
+    meeting_times = [meeting_time[0] for meeting_time in cursor.fetchall()]
+
+    #Converting data
+    values = []
+    if meetings and meeting_times:
+        for i in range(len(meetings)):
+            date = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%A, %b %-d, %Y')
+            time = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%-I:%M%p')
+            values.append(f"**{str(meetings[i])}** on {date} at {time}")
+        meetings_embed.add_field(name="Meetings", value='>>> ' + '\n'.join(values))
+    else:
+        meetings_embed.add_field(name="No upcoming meetings at this time", value="Use !meeting to create one!")
+
+    await ctx.send(embed=meetings_embed)
+
 #Command Specific Error Handling--------------------------
 
 @clear.error
@@ -304,6 +329,10 @@ async def poll_error(ctx, error):
         await ctx.send(content=None, embed=arg_missing)
     else:
         await ctx.send(content=None, embed=format_error)
+
+@list.error
+async def list_error(ctx, error):
+    print(error)
 
 #Other Functions------------------------------------------
 
