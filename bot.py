@@ -7,6 +7,7 @@ import time
 import asyncio
 from word2number import w2n
 from dateutil.parser import parse
+import sqlite3
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -64,7 +65,7 @@ async def _8ball(ctx, *, question):
                 "Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Very doubtful."]
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
-
+    
 @client.command
 async def pog(ctx):
     pog_card = discord.Embed(colour = discord.Colour.green())
@@ -134,7 +135,7 @@ async def meeting(ctx, *, information):
                     t = w2n.word_to_num(info[i-1])
                     name = information[:information.index(info[i-1])] if info[i-2] != 'in' else information[:information.rindex(' in ')]
                 
-                name = name.strip('\"')
+                name = str(name).strip('\"')
                 now = datetime.datetime.now().timestamp()
                 m_time = 0
                 if j == 0 or j == 1:
@@ -150,11 +151,20 @@ async def meeting(ctx, *, information):
                 time = datetime.datetime.fromtimestamp(m_time).strftime('%-I:%M%p')
                 date = datetime.datetime.fromtimestamp(m_time).strftime('%A, %b %-d, %Y')
 
+                #Data Storage
+                db = sqlite3.connect('main.sqlite')
+                cursor = db.cursor()
+                sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
+                val = (ctx.guild.id, ctx.channel.id, name, m_time)
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+
                 #Create embeds and Send
                 meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-                meeting_card.set_footer(text=f"Tip: You will reminded about this meeting before it starts!")
-
+                meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
                 await ctx.send(content=None, embed=meeting_card) 
                 await asyncio.sleep(m_time-now)
 
@@ -165,7 +175,7 @@ async def meeting(ctx, *, information):
                 announce = discord.Embed(colour=discord.Colour.green())
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
-                return        
+                return
     
     if '"' in information:
         name = information[information.index('"')+1 : information.rindex('"')]
@@ -175,6 +185,16 @@ async def meeting(ctx, *, information):
             m_time = d.timestamp()
             time = d.strftime('%-I:%M%p')
             date = d.strftime('%A, %b %-d, %Y')
+
+            #Data Storage
+            db = sqlite3.connect('main.sqlite')
+            cursor = db.cursor()
+            sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
+            val = (ctx.guild.id, ctx.channel.id, name, m_time)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
 
             meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
             meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
@@ -198,7 +218,7 @@ async def meeting(ctx, *, information):
         await ctx.send(content=None, embed=format_error)
 
 @client.command()
-async def poll(ctx, *, information):
+async def poll(ctx, *, information): #Poll command
     if '\"' in information and ',' in information and information[len(information)-1].isnumeric():
         op = []
         polltimeinminutes = 0
@@ -213,7 +233,7 @@ async def poll(ctx, *, information):
                 polltimeinminutes = int(information[information.rindex(j)+1:].strip())
                 break
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
-
+        
         if len(op) <= 20:
 
             options = {}
@@ -244,6 +264,31 @@ async def poll(ctx, *, information):
             too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
             await ctx.send(embed=too_many_options)
 
+@client.command()
+async def list(ctx): #List command that lists all upcoming meetings
+    meetings_embed = discord.Embed(title="\U0001F4BC Upcoming Meetings", colour=discord.Colour.green())
+
+    #Accessing data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
+    meetings = [meeting[0] for meeting in cursor.fetchall()]
+    cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
+    meeting_times = [meeting_time[0] for meeting_time in cursor.fetchall()]
+
+    #Converting data
+    values = []
+    if meetings and meeting_times:
+        for i in range(len(meetings)):
+            date = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%A, %b %-d, %Y')
+            time = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%-I:%M%p')
+            values.append(f"**{str(meetings[i])}** on {date} at {time}")
+        meetings_embed.add_field(name="Meetings", value='>>> ' + '\n'.join(values))
+    else:
+        meetings_embed.add_field(name="No upcoming meetings at this time", value="Use !meeting to create one!")
+
+    await ctx.send(embed=meetings_embed)
+
 #Command Specific Error Handling--------------------------
 
 @clear.error
@@ -251,7 +296,7 @@ async def clear_error(ctx, error):
     arg_missing = discord.Embed(title='Missing Required Argument!', description="You must specify a number of messages to clear!\neg. !clear 50\n Please refer to !help for more info.", colour=discord.Color.green())
     perms_missing = discord.Embed(title="Missing Permissions!", description="You must have the Manage Messages Permission to run this command.", colour=discord.Color.green())
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(content=None, embed=arg_missing)  
+        await ctx.send(content=None, embed=arg_missing)
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send(content=None, embed=perms_missing)
     else:
@@ -273,7 +318,8 @@ async def meeting_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(content=None, embed=time_missing)
     else:
-        await ctx.send(content=None, embed=format_error)
+        print(error)
+        #await ctx.send(content=None, embed=format_error)
 
 @poll.error
 async def poll_error(ctx, error):
@@ -283,6 +329,10 @@ async def poll_error(ctx, error):
         await ctx.send(content=None, embed=arg_missing)
     else:
         await ctx.send(content=None, embed=format_error)
+
+@list.error
+async def list_error(ctx, error):
+    print(error)
 
 #Other Functions------------------------------------------
 
