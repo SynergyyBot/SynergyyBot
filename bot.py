@@ -63,8 +63,7 @@ async def _8ball(ctx, *, question):
                 "Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Very doubtful."]
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
-
-
+    
 @client.command
 async def pog(ctx):
     pog_card = discord.Embed(colour = discord.Colour.green())
@@ -105,6 +104,9 @@ async def help(ctx):
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
     embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow!', inline=False)
     #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
+    embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
+    embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
+    embed.add_field(name='!8ball', value = 'Asks the magical 8ball for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
     embed.set_footer(text="Tip: All commands can be invoked using !")
 
     await ctx.send(embed=embed)
@@ -215,7 +217,7 @@ async def poll(ctx, *, information):
                 polltimeinminutes = int(information[information.rindex(j)+1:].strip())
                 break
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
-
+        
         if len(op) <= 20:
 
             options = {}
