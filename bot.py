@@ -65,7 +65,7 @@ async def _8ball(ctx, *, question):
                 "Don't count on it.", "My reply is no.", "My sources say no.", "Outlook not so good.", "Very doubtful."]
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
-
+    
 @client.command
 async def pog(ctx):
     pog_card = discord.Embed(colour = discord.Colour.green())
@@ -164,12 +164,7 @@ async def meeting(ctx, *, information):
                 #Create embeds and Send
                 meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
                 meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-<<<<<<< HEAD
                 meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-=======
-                meeting_card.set_footer(text=f"Tip: You will reminded about this meeting before it starts!")
-
->>>>>>> 4c4c3c4a856b92d41bc7bad4b45a980adfac6002
                 await ctx.send(content=None, embed=meeting_card) 
                 await asyncio.sleep(m_time-now)
 
@@ -180,15 +175,7 @@ async def meeting(ctx, *, information):
                 announce = discord.Embed(colour=discord.Colour.green())
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
-<<<<<<< HEAD
-<<<<<<< HEAD
                 return
-=======
-                return        
->>>>>>> 30e4216f5d4bcbeead26103165c0d7486a367e07
-=======
-                return        
->>>>>>> 4c4c3c4a856b92d41bc7bad4b45a980adfac6002
     
     if '"' in information:
         name = information[information.index('"')+1 : information.rindex('"')]
@@ -199,8 +186,6 @@ async def meeting(ctx, *, information):
             time = d.strftime('%-I:%M%p')
             date = d.strftime('%A, %b %-d, %Y')
 
-<<<<<<< HEAD
-<<<<<<< HEAD
             #Data Storage
             db = sqlite3.connect('main.sqlite')
             cursor = db.cursor()
@@ -211,10 +196,6 @@ async def meeting(ctx, *, information):
             cursor.close()
             db.close()
 
-=======
->>>>>>> 30e4216f5d4bcbeead26103165c0d7486a367e07
-=======
->>>>>>> 4c4c3c4a856b92d41bc7bad4b45a980adfac6002
             meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
             meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
             meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
@@ -226,27 +207,11 @@ async def meeting(ctx, *, information):
             reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
             
             await ctx.author.send(content=None, embed=reminder_card)
-<<<<<<< HEAD
-<<<<<<< HEAD
 
             announce = discord.Embed(colour=discord.Colour.green())
             announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
             await ctx.send(embed=announce)
 
-=======
-
-            announce = discord.Embed(colour=discord.Colour.green())
-            announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
-            await ctx.send(embed=announce)
-
->>>>>>> 30e4216f5d4bcbeead26103165c0d7486a367e07
-=======
-
-            announce = discord.Embed(colour=discord.Colour.green())
-            announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
-            await ctx.send(embed=announce)
-
->>>>>>> 4c4c3c4a856b92d41bc7bad4b45a980adfac6002
         else:
             await ctx.send(content=None, embed=time_missing)
     else:
@@ -268,7 +233,7 @@ async def poll(ctx, *, information): #Poll command
                 polltimeinminutes = int(information[information.rindex(j)+1:].strip())
                 break
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
-
+        
         if len(op) <= 20:
 
             options = {}
@@ -306,7 +271,7 @@ async def clear_error(ctx, error):
     arg_missing = discord.Embed(title='Missing Required Argument!', description="You must specify a number of messages to clear!\neg. !clear 50\n Please refer to !help for more info.", colour=discord.Color.green())
     perms_missing = discord.Embed(title="Missing Permissions!", description="You must have the Manage Messages Permission to run this command.", colour=discord.Color.green())
     if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(content=None, embed=arg_missing)  
+        await ctx.send(content=None, embed=arg_missing)
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send(content=None, embed=perms_missing)
     else:
