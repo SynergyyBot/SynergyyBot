@@ -169,13 +169,27 @@ async def meeting(ctx, *, information):
                 await ctx.send(content=None, embed=meeting_card) 
                 await asyncio.sleep(m_time-now)
 
+                #DM Reminder
                 reminder_card = discord.Embed(colour = discord.Colour.green())
                 reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
                 await ctx.author.send(content=None, embed=reminder_card)
 
+                #Server Announcement
                 announce = discord.Embed(colour=discord.Colour.green())
                 announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
                 await ctx.send(embed=announce)
+
+                #Delete meeting for database
+                db = sqlite3.connect('main.sqlite')
+                cursor = db.cursor()
+                sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
+                val = (name, ctx.guild.id)
+                cursor = db.cursor()
+                cursor.execute(sql, val)
+                db.commit()
+                cursor.close()
+                db.close()
+
                 return
     
     if '"' in information:
@@ -197,21 +211,33 @@ async def meeting(ctx, *, information):
             cursor.close()
             db.close()
 
+            #Meeting Confirmation
             meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
             meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
             meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-
             await ctx.send(content=None, embed=meeting_card)
             await asyncio.sleep(m_time-now)
-
+            
+            #Meeting DM Reminder
             reminder_card = discord.Embed(colour = discord.Colour.green())
             reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
-            
             await ctx.author.send(content=None, embed=reminder_card)
 
+            #Meeting Server Announce
             announce = discord.Embed(colour=discord.Colour.green())
             announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
             await ctx.send(embed=announce)
+
+            #Delete meeting for database
+            db = sqlite3.connect('main.sqlite')
+            cursor = db.cursor()
+            sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
+            val = (name, ctx.guild.id)
+            cursor = db.cursor()
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
 
         else:
             await ctx.send(content=None, embed=time_missing)
