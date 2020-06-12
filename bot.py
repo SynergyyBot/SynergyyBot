@@ -8,6 +8,7 @@ import asyncio
 from word2number import w2n
 from dateutil.parser import parse
 import sqlite3
+from operator import itemgetter
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -117,11 +118,13 @@ async def meeting(ctx, *, information):
     name = time = date = ''
     time_missing = discord.Embed(title='Missing Meeting Time!', description="For further help, please refer to !help", colour=discord.Color.green())
     format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting "Physics Project" in 2 hours\nFor more info, please refer to !help', colour=discord.Color.green())
+    on_condition = True
 
     for i in range(len(info)):
         for j in range(len(timescales)):
             #If user requests a meeting IN a certain amount of time
             if timescales[j] in info[i].lower() and i >= 1:
+                on_condition = False
 
                 #(!meeting name in # timescale)
                 if info[i-1].isnumeric():
@@ -152,97 +155,66 @@ async def meeting(ctx, *, information):
                 time = datetime.datetime.fromtimestamp(m_time).strftime('%-I:%M%p')
                 date = datetime.datetime.fromtimestamp(m_time).strftime('%A, %b %-d, %Y')
 
-                #Data Storage
-                db = sqlite3.connect('main.sqlite')
-                cursor = db.cursor()
-                sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
-                val = (ctx.guild.id, ctx.channel.id, name, m_time)
-                cursor.execute(sql, val)
-                db.commit()
-                cursor.close()
-                db.close()
-
-                #Create embeds and Send
-                meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
-                meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-                meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-                await ctx.send(content=None, embed=meeting_card) 
-                await asyncio.sleep(m_time-now)
-
-                #DM Reminder
-                reminder_card = discord.Embed(colour = discord.Colour.green())
-                reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
-                await ctx.author.send(content=None, embed=reminder_card)
-
-                #Server Announcement
-                announce = discord.Embed(colour=discord.Colour.green())
-                announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
-                await ctx.send(embed=announce)
-
-                #Delete meeting for database
-                db = sqlite3.connect('main.sqlite')
-                cursor = db.cursor()
-                sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
-                val = (name, ctx.guild.id)
-                cursor = db.cursor()
-                cursor.execute(sql, val)
-                db.commit()
-                cursor.close()
-                db.close()
-
-                return
-    
-    if '"' in information:
-        name = information[information.index('"')+1 : information.rindex('"')]
-        if has_date(information[information.rindex('"')+1:]):
-            d = parse(information[information.rindex('"')+1:])
-            now = datetime.datetime.now().timestamp()
-            m_time = d.timestamp()
-            time = d.strftime('%-I:%M%p')
-            date = d.strftime('%A, %b %-d, %Y')
-
-            #Data Storage
-            db = sqlite3.connect('main.sqlite')
-            cursor = db.cursor()
-            sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
-            val = (ctx.guild.id, ctx.channel.id, name, m_time)
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-
-            #Meeting Confirmation
-            meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
-            meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-            meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-            await ctx.send(content=None, embed=meeting_card)
-            await asyncio.sleep(m_time-now)
-            
-            #Meeting DM Reminder
-            reminder_card = discord.Embed(colour = discord.Colour.green())
-            reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
-            await ctx.author.send(content=None, embed=reminder_card)
-
-            #Meeting Server Announce
-            announce = discord.Embed(colour=discord.Colour.green())
-            announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
-            await ctx.send(embed=announce)
-
-            #Delete meeting for database
-            db = sqlite3.connect('main.sqlite')
-            cursor = db.cursor()
-            sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
-            val = (name, ctx.guild.id)
-            cursor = db.cursor()
-            cursor.execute(sql, val)
-            db.commit()
-            cursor.close()
-            db.close()
-
+    if on_condition:
+        if '"' in information:
+            name = information[information.index('"')+1 : information.rindex('"')]
+            if has_date(information[information.rindex('"')+1:]):
+                d = parse(information[information.rindex('"')+1:])
+                now = datetime.datetime.now().timestamp()
+                m_time = d.timestamp()
+                time = d.strftime('%-I:%M%p')
+                date = d.strftime('%A, %b %-d, %Y')
+            else:
+                await ctx.send(content=None, embed=time_missing)
         else:
-            await ctx.send(content=None, embed=time_missing)
-    else:
-        await ctx.send(content=None, embed=format_error)
+            await ctx.send(content=None, embed=format_error)
+
+    #Data Storage
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
+    val = (ctx.guild.id, ctx.channel.id, name, m_time)
+    cursor.execute(sql, val)
+    db.commit()
+    cursor.close()
+    db.close()
+
+    #Meeting Confirmation
+    meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
+    meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
+    meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
+    await ctx.send(content=None, embed=meeting_card)
+    await asyncio.sleep(m_time-now)
+
+    #Check if event still exists
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    sql= "SELECT rowid FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?"
+    val = (name, ctx.guild.id, m_time)
+    cursor.execute(sql, val)
+    data = cursor.fetchone()
+    
+    if data:
+    #Meeting DM Reminder
+        reminder_card = discord.Embed(colour = discord.Colour.green())
+        reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
+        await ctx.author.send(content=None, embed=reminder_card)
+
+        #Meeting Server Announce
+        announce = discord.Embed(colour=discord.Colour.green())
+        announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
+        await ctx.send(embed=announce)
+
+        #Delete meeting for database
+        db = sqlite3.connect('main.sqlite')
+        cursor = db.cursor()
+        sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
+        val = (name, ctx.guild.id)
+        cursor = db.cursor()
+        cursor.execute(sql, val)
+        db.commit()
+        cursor.close()
+        db.close()
 
 @client.command()
 async def poll(ctx, *, information): #Poll command
@@ -299,20 +271,24 @@ async def list(ctx): #List command that lists all upcoming meetings
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
-    meetings = [meeting[0] for meeting in cursor.fetchall()]
+    meetings = [[meeting[0]] for meeting in cursor.fetchall()]
     cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
-    meeting_times = [meeting_time[0] for meeting_time in cursor.fetchall()]
-
+    i = 0
+    for meeting_time in cursor.fetchall():
+        meetings[i].append(meeting_time[0])
+        i += 1
+    meetings.sort(key=itemgetter(1))
+    
     #Converting data
     values = []
-    if meetings and meeting_times:
+    if meetings:
         for i in range(len(meetings)):
-            date = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%A, %b %-d, %Y')
-            time = datetime.datetime.fromtimestamp(int(meeting_times[i])).strftime('%-I:%M%p')
-            values.append(f"**{str(meetings[i])}** on {date} at {time}")
+            date = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%A, %b %-d, %Y')
+            time = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%-I:%M%p')
+            values.append(f"**{str(meetings[i][0])}** on {date} at {time}")
         meetings_embed.add_field(name="Meetings", value='>>> ' + '\n'.join(values))
     else:
-        meetings_embed.add_field(name="No upcoming meetings.", value="Use !meeting to create one!\nRefer to !help for more info.")
+        meetings_embed.add_field(name="No upcoming meetings.", value=">>> Use !meeting to create one!\nRefer to !help for more info.")
 
     await ctx.send(embed=meetings_embed)
 
@@ -372,4 +348,4 @@ def has_date(string, fuzzy=True):
         return False
 
 #Bot Token Pairing--------------------------------
-client.run('TOKEN')
+client.run('NzE3NDMyMzc0OTY2ODc4MjM4.XuJZ9Q.AEGKRj8NStXkFCxmNApufMmwgN4')
