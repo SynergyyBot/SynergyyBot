@@ -351,6 +351,11 @@ async def list_error(ctx, error):
 
 #Other Functions------------------------------------------
 
+def read_token():
+    with open("token.txt", 'r') as f:
+        lines = f.readlines()
+        return lines[0].strip()
+
 def has_date(string, fuzzy=True):
     try: 
         parse(string, fuzzy=fuzzy)
@@ -360,4 +365,4 @@ def has_date(string, fuzzy=True):
         return False
 
 #Bot Token Pairing--------------------------------
-client.run('TOKEN')
+client.run(read_token())
