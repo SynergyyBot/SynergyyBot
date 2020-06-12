@@ -348,4 +348,4 @@ def has_date(string, fuzzy=True):
         return False
 
 #Bot Token Pairing--------------------------------
-client.run('NzE3NDMyMzc0OTY2ODc4MjM4.XuJZ9Q.AEGKRj8NStXkFCxmNApufMmwgN4')
+client.run('TOKEN')
