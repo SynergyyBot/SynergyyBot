@@ -280,13 +280,25 @@ async def list(ctx): #List command that lists all upcoming meetings
     meetings.sort(key=itemgetter(1))
     
     #Converting data
-    values = []
     if meetings:
+        today = []
+        week = []
+        future = []
         for i in range(len(meetings)):
             date = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%A, %b %-d, %Y')
             time = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%-I:%M%p')
-            values.append(f"**{str(meetings[i][0])}** on {date} at {time}")
-        meetings_embed.add_field(name="Meetings", value='>>> ' + '\n'.join(values))
+            if datetime.datetime.fromtimestamp(int(meetings[i][1])).date() <= datetime.datetime.today().date():
+                today.append(f"**{str(meetings[i][0])}** on {date} at {time}")
+            elif datetime.datetime.fromtimestamp(int(meetings[i][1])).date() <= datetime.datetime.fromtimestamp(datetime.datetime.now().timestamp()+604800).date():
+                week.append(f"**{str(meetings[i][0])}** on {date} at {time}")
+            else:
+                future.append(f"**{str(meetings[i][0])}** on {date} at {time}")
+        if today:
+            meetings_embed.add_field(name="Today", value='>>> ' + '\n'.join(today), inline=False)
+        if week:
+            meetings_embed.add_field(name="This Week", value='>>> ' + '\n'.join(week), inline=False)
+        if future:
+            meetings_embed.add_field(name="Later", value='>>> ' + '\n'.join(future), inline=False)
     else:
         meetings_embed.add_field(name="No upcoming meetings.", value=">>> Use !meeting to create one!\nRefer to !help for more info.")
 
