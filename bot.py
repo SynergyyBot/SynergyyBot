@@ -41,7 +41,7 @@ async def ping(ctx):
 @client.command(pass_context=True) #Clear Messages Command
 @commands.has_permissions(manage_messages=True)
 async def clear(ctx, amount=None):
-    if amount.isnumeric():           
+    if amount.isnumeric():
         amount = int(amount)
         await ctx.channel.purge(limit=amount+1)  
         amount = str(amount)
@@ -210,7 +210,6 @@ async def meeting(ctx, *, information):
         cursor = db.cursor()
         sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
         val = (name, ctx.guild.id)
-        cursor = db.cursor()
         cursor.execute(sql, val)
         db.commit()
         cursor.close()
@@ -304,6 +303,171 @@ async def list(ctx): #List command that lists all upcoming meetings
 
     await ctx.send(embed=meetings_embed)
 
+@client.command()
+async def delete(ctx, *, name=None):
+    deleted_embed = discord.Embed(title='Meeting Deleted', colour=discord.Colour.green())
+    if name:
+        gt_10 = False
+
+        #Accessing data
+        db = sqlite3.connect('main.sqlite')
+        cursor = db.cursor()
+        sql = "SELECT meeting_name FROM meetings WHERE meeting_name=? AND guild_id=?"
+        val = (name, ctx.guild.id)
+        cursor.execute(sql, val)
+        meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+
+        #If there is only one meeting with entered name
+        if len(meetings) == 1:
+            sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
+            val = (name, ctx.guild.id)
+            cursor.execute(sql, val)
+            db.commit()
+            cursor.close()
+            db.close()
+            deleted_embed.add_field(name=None, value=f'>>> {name} successfully deleted')
+            await ctx.send(embed=deleted_embed)
+            return
+
+        #If there is more than one meeting with entered name and exceeds 10
+        elif len(meetings) > 10:
+            meetings = meetings[:10]
+            gt_10 = True
+
+        elif len(meetings) == 0:
+            no_option = discord.Embed(title='Meeting Not Found', description='>>> No meetings found with that name.', colour=discord.Colour.green())
+            await ctx.send(embed=no_option)
+            return
+
+        #Getting Meeting time to display
+        sql = "SELECT meeting_time FROM meetings WHERE meeting_name=? AND guild_id=?"
+        val = (name, ctx.guild.id)
+        cursor.execute(sql, val)
+        i = 0
+        for meeting_time in cursor.fetchall():
+            meetings[i].append(meeting_time[0])
+            meetings[i].insert(0, unicode_block[i])
+            i += 1
+            if i >= len(meetings):
+                break
+        meetings.sort(key=itemgetter(2))
+
+        #Displaying options
+        values = []
+        for i in range(len(meetings)):
+            date = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%b %-d, %Y')
+            time = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%-I:%M%p')
+            values.append(f"{meetings[i][0]} - **{str(meetings[i][1])}** on {date} at {time}")
+        delete_options = discord.Embed(title='Delete Event', colour=discord.Colour.green())
+        delete_options.add_field(name="Select events to delete", value='>>> ' + '\n'.join(values), inline=False)
+
+        #If original meetings list was greater than 10
+        if gt_10:
+            delete_options.add_field(name=None, value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
+
+        #Adding reactions to get choices
+        message_1 = await ctx.send(embed=delete_options)
+        for meeting in meetings:
+            await message_1.add_reaction(emoji=meeting[0])
+        await message_1.add_reaction(emoji='✅')
+
+        #getting choices
+        tb_deleted = []
+        while True:
+            message_1 = await ctx.fetch_message(message_1.id)
+            counts = {react.emoji: react.count for react in message_1.reactions}
+            if counts['✅'] > 1:
+                for count in counts:
+                    if counts[count] > 1:
+                        tb_deleted.append(count)
+                break
+
+        #Delete choices
+        for meeting in meetings:
+            for dl in tb_deleted:
+                if meeting[0] == dl:
+                    sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
+                    val = (meeting[1], ctx.guild.id, meeting[2])
+                    cursor.execute(sql, val)
+                    deleted_embed.add_field(name=None, value=f'>>> {meeting[1]} successfully deleted', inline=False)
+
+        db.commit()
+        cursor.close()
+        db.close()
+        await ctx.send(embed=deleted_embed)
+    
+    else:
+        gt_10 = False
+
+        #Accessing data
+        db = sqlite3.connect('main.sqlite')
+        cursor = db.cursor()
+        cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
+        meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+
+        if len(meetings) > 10:
+            meetings = meetings[:10]
+            gt_10 = True
+        elif len(meetings) == 0:
+            no_option = discord.Embed(title='Meeting Not Found', description='>>> No meetings found.', colour=discord.Colour.green())
+            await ctx.send(embed=no_option)
+            return
+
+        #Getting Meeting time to display
+        cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
+        i = 0
+        for meeting_time in cursor.fetchall():
+            meetings[i].append(meeting_time[0])
+            meetings[i].insert(0, unicode_block[i])
+            i += 1
+            if i >= len(meetings):
+                break
+        meetings.sort(key=itemgetter(2))
+
+        #Displaying options
+        values = []
+        for i in range(len(meetings)):
+            date = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%b %-d, %Y')
+            time = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%-I:%M%p')
+            values.append(f"{meetings[i][0]} - **{str(meetings[i][1])}** on {date} at {time}")
+        delete_options = discord.Embed(title='Delete Event', colour=discord.Colour.green())
+        delete_options.add_field(name="Select events to delete", value='>>> ' + '\n'.join(values), inline=False)
+        
+        #If original meetings list was greater than 10
+        if gt_10:
+            delete_options.add_field(name=None, value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
+
+        #Adding reactions to get choices
+        message_1 = await ctx.send(embed=delete_options)
+        for meeting in meetings:
+            await message_1.add_reaction(emoji=meeting[0])
+        await message_1.add_reaction(emoji='✅')
+
+        #getting choices
+        tb_deleted = []
+        while True:
+            message_1 = await ctx.fetch_message(message_1.id)
+            counts = {react.emoji: react.count for react in message_1.reactions}
+            if counts['✅'] > 1:
+                for count in counts:
+                    if counts[count] > 1:
+                        tb_deleted.append(count)
+                break
+
+        #Delete choices
+        for meeting in meetings:
+            for dl in tb_deleted:
+                if meeting[0] == dl:
+                    sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
+                    val = (meeting[1], ctx.guild.id, meeting[2])
+                    cursor.execute(sql, val)
+                    deleted_embed.add_field(name=None, value=f'>>> {meeting[1]} successfully deleted', inline=False)
+
+        db.commit()
+        cursor.close()
+        db.close()
+        await ctx.send(embed=deleted_embed)
+
 #Command Specific Error Handling--------------------------
 
 @clear.error
@@ -333,8 +497,7 @@ async def meeting_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(content=None, embed=time_missing)
     else:
-        print(error)
-        #await ctx.send(content=None, embed=format_error)
+        await ctx.send(content=None, embed=format_error)
 
 @poll.error
 async def poll_error(ctx, error):
@@ -347,6 +510,10 @@ async def poll_error(ctx, error):
 
 @list.error
 async def list_error(ctx, error):
+    print(error)
+
+@delete.error
+async def delete_error(ctx, error):
     print(error)
 
 #Other Functions------------------------------------------
