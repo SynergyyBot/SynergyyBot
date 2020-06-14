@@ -9,7 +9,6 @@ from word2number import w2n
 from dateutil.parser import parse
 import sqlite3
 from operator import itemgetter
-import pytz
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -326,7 +325,7 @@ async def delete(ctx, *, name=None):
             db.commit()
             cursor.close()
             db.close()
-            deleted_embed.add_field(name=None, value=f'>>> {name} successfully deleted')
+            deleted_embed.add_field(name='\u200b', value=f'>>> {name} successfully deleted')
             await ctx.send(embed=deleted_embed)
             return
 
@@ -364,7 +363,7 @@ async def delete(ctx, *, name=None):
 
         #If original meetings list was greater than 10
         if gt_10:
-            delete_options.add_field(name=None, value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
+            delete_options.add_field(name='\u200b', value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
 
         #Adding reactions to get choices
         message_1 = await ctx.send(embed=delete_options)
@@ -384,13 +383,16 @@ async def delete(ctx, *, name=None):
                 break
 
         #Delete choices
+        dmeetings = []
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
                     sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
                     val = (meeting[1], ctx.guild.id, meeting[2])
                     cursor.execute(sql, val)
-                    deleted_embed.add_field(name=None, value=f'>>> {meeting[1]} successfully deleted', inline=False)
+                    dmeetings.append(meeting[1])
+        deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
+        deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
 
         db.commit()
         cursor.close()
@@ -436,7 +438,7 @@ async def delete(ctx, *, name=None):
         
         #If original meetings list was greater than 10
         if gt_10:
-            delete_options.add_field(name=None, value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
+            delete_options.add_field(name='\u200b', value='Results exceed display limit. Try using !delete *meeting name* to narrow your search', inline=False)
 
         #Adding reactions to get choices
         message_1 = await ctx.send(embed=delete_options)
@@ -456,13 +458,16 @@ async def delete(ctx, *, name=None):
                 break
 
         #Delete choices
+        dmeetings = []
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
                     sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
                     val = (meeting[1], ctx.guild.id, meeting[2])
                     cursor.execute(sql, val)
-                    deleted_embed.add_field(name=None, value=f'>>> {meeting[1]} successfully deleted', inline=False)
+                    dmeetings.append(meeting[1])
+        deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
+        deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
 
         db.commit()
         cursor.close()
