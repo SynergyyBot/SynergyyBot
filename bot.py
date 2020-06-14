@@ -9,6 +9,7 @@ from word2number import w2n
 from dateutil.parser import parse
 import sqlite3
 from operator import itemgetter
+from pytz import timezone
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -473,6 +474,65 @@ async def delete(ctx, *, name=None):
         cursor.close()
         db.close()
         await ctx.send(embed=deleted_embed)
+
+@client.command()
+async def timenow(ctx):
+    fmt = "**%H:%M** on %Y-%m-%d "
+    #Timezone Conversions
+    now_utc = datetime.datetime.now(timezone('UTC'))
+    now_london = now_utc.astimezone(timezone('Europe/London'))
+    now_berlin = now_utc.astimezone(timezone('Europe/Berlin'))
+    now_cet = now_utc.astimezone(timezone('CET'))
+    now_israel = now_utc.astimezone(timezone('Israel'))
+    now_dubai = now_utc.astimezone(timezone("Asia/Dubai"))
+    now_pakistan = now_utc.astimezone(timezone('Asia/Karachi'))
+    now_india = now_utc.astimezone(timezone('Asia/Kolkata'))
+    now_bangladesh = now_utc.astimezone(timezone('Asia/Dhaka'))
+    now_phnom = now_utc.astimezone(timezone('Asia/Phnom_Penh'))
+    now_china = now_utc.astimezone(timezone('Asia/Hong_Kong'))    
+    now_japan = now_utc.astimezone(timezone('Asia/Tokyo')) 
+    now_australia = now_utc.astimezone(timezone('Australia/Sydney')) 
+    now_edmonton = now_utc.astimezone(timezone('America/Edmonton'))   
+    now_canada_east = now_utc.astimezone(timezone('Canada/Eastern'))
+    now_central = now_utc.astimezone(timezone('US/Central'))
+    now_pacific = now_utc.astimezone(timezone('US/Pacific'))
+
+    currenttime_card = discord.Embed(title="\U0001F551 Current International Times", colour = discord.Colour.green())
+
+    currenttime_card.add_field(name="Coordinated Universal Time (UTC+0)", value=f">>> {now_utc.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="London (UTC+1/BST)", value=f">>> {now_london.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Berlin (UTC+2/CET)", value=f">>> {now_berlin.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="Israel and East Africa (UTC+3/IDT)", value=f">>> {now_israel.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Dubai (UTC+4/GST)", value=f">>> {now_dubai.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="Pakistan (UTC+5/PLT)", value=f">>> {now_pakistan.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="India (UTC+5.5/IST)", value=f">>> {now_india.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="Bangladesh (UTC+6/BST)", value=f">>> {now_bangladesh.strftime(fmt)}", inline=True) 
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Thailand and Vietnam (UTC+7/ICT)", value=f">>> {now_phnom.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="China (UTC+8/CST)", value=f">>> {now_china.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Japan (UTC+9/JST)", value=f">>> {now_japan.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="Sydney (UTC+10/AEST)", value=f">>> {now_australia.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Canada Eastern (UTC-4/EDT)", value=f">>> {now_canada_east.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="US Central (UTC-5/CDT)", value=f">>> {now_central.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.add_field(name="Central Standard (UTC-6/CST)", value=f">>> {now_edmonton.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="US Pacific (UTC-7/PDT)", value=f">>> {now_central.strftime(fmt)}", inline=True)
+    currenttime_card.add_field(name="\u200b", value=f"\u200b", inline=True)
+
+    currenttime_card.set_footer(text="Tip: UTC and GMT are interchangable.")
+    await ctx.send(embed=currenttime_card)
 
 #Command Specific Error Handling--------------------------
 
