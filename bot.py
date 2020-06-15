@@ -196,6 +196,21 @@ async def meeting(ctx, *, information):
     data = cursor.fetchone()
     
     if data:
+        # if m_time-now-900 >= 0:
+        #     await asyncio.sleep((m_time-now)-900)
+
+        #     #DM 15 Min Reminder
+        #     _15min_card = discord.Embed(colour = discord.Colour.green())
+        #     _15min_card.add_field(name= "Reminder!", value = f"Your meeting, **{name}** is starting in **15** minutes!\n Head over to your teams server to participate.")
+        #     await ctx.author.send(content=None, embed=_15min_card)
+
+        #     #15 Min Announce
+        #     _15_announce = discord.Embed(colour=discord.Colour.green())
+        #     _15_announce.add_field(name="Reminder!", value =f"The meeting **{name}** will start in **15** minutes!")
+        #     await ctx.send(embed=_15_announce)
+
+        #     await asyncio.sleep(900)
+        
     #Meeting DM Reminder
         reminder_card = discord.Embed(colour = discord.Colour.green())
         reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
