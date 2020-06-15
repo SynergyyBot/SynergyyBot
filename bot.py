@@ -184,7 +184,7 @@ async def meeting(ctx, *, information):
     meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
     meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
     meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
-    await ctx.send(content=None, embed=meeting_card)
+    confirmation = await ctx.send(content=None, embed=meeting_card)
     await asyncio.sleep(m_time-now)
 
     #Check if event still exists
@@ -212,8 +212,8 @@ async def meeting(ctx, *, information):
         #     await asyncio.sleep(900)
         
     #Meeting DM Reminder
-        reminder_card = discord.Embed(colour = discord.Colour.green())
-        reminder_card.set_author(name="Hey! This is a reminder about your meeting, \"{0}\".\nHead over to your team's discord server to participate!".format(name))
+        url = "http://discordapp.com/channels/" + str(confirmation.guild.id) + '/' + str(confirmation.channel.id) + '/' + str(confirmation.id)
+        reminder_card = discord.Embed(description=f"Hey! This is a reminder about your meeting, [{name}]({url}).\nHead over to your team's discord server to participate!", colour = discord.Colour.green())
         await ctx.author.send(content=None, embed=reminder_card)
 
         #Meeting Server Announce
