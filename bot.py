@@ -361,6 +361,7 @@ async def delete(ctx, *, name=None):
             values.append(f"{meetings[i][0]} - **{str(meetings[i][1])}** on {date} at {time}")
         delete_options = discord.Embed(title='Delete Event', colour=discord.Colour.green())
         delete_options.add_field(name="Select events to delete", value='>>> ' + '\n'.join(values), inline=False)
+        delete_options.set_footer(text="Use the reactions below to select which events to delete, then click the checkmark to confirm.")
 
         #If original meetings list was greater than 10
         if gt_10:
