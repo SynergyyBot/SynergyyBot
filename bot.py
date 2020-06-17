@@ -173,8 +173,8 @@ async def meeting(ctx, *, information):
     #Data Storage
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
-    val = (ctx.guild.id, ctx.channel.id, name, m_time)
+    sql = ("INSERT INTO meetings VALUES(?,?,?,?,?)")
+    val = (ctx.guild.id, ctx.channel.id, name, m_time, None)
     cursor.execute(sql, val)
     db.commit()
     cursor.close()
@@ -185,6 +185,7 @@ async def meeting(ctx, *, information):
     meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
     meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
     confirmation = await ctx.send(content=None, embed=meeting_card)
+    await confirmation.add_reaction(emoji='✅')
     await asyncio.sleep(m_time-now)
 
     #Check if event still exists
@@ -197,9 +198,18 @@ async def meeting(ctx, *, information):
     
     if data:
     #Meeting DM Reminder
+        rvsp = []
+        message = await ctx.channel.fetch_message(confirmation.id)
+        for reaction in message.reactions:
+            if str(reaction) == '✅':
+                rvsp = await reaction.users().flatten()
+            rvsp = rvsp[1:]
+
         url = "http://discordapp.com/channels/" + str(confirmation.guild.id) + '/' + str(confirmation.channel.id) + '/' + str(confirmation.id)
         reminder_card = discord.Embed(description=f"Hey! This is a reminder about your meeting, [{name}]({url}).\nHead over to your team's discord server to participate!", colour = discord.Colour.green())
-        await ctx.author.send(content=None, embed=reminder_card)
+        for member in rvsp:
+            dm = await member.create_dm()
+            await dm.send(embed=reminder_card)
 
         #Meeting Server Announce
         announce = discord.Embed(colour=discord.Colour.green())
@@ -564,6 +574,7 @@ async def meeting_error(ctx, error):
         await ctx.send(content=None, embed=time_missing)
     else:
         await ctx.send(content=None, embed=format_error)
+        print(error)
 
 @poll.error
 async def poll_error(ctx, error):
