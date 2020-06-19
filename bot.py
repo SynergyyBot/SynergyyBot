@@ -113,6 +113,40 @@ async def help(ctx):
 
     await ctx.send(embed=embed)
 
+
+#------------------------------------------------------------------
+
+@client.command()
+async def todo(ctx, *, todo_item):
+    todo_add_card = discord.Embed(colour=discord.Color.green())
+    todo_add_card.add_field(name="To-Do Item Added!", value=f"**{todo_item}** was added to your todo list.")
+    todo_add_card.set_footer(text="Use !viewtodo to see your list and use !complete to check off items.")
+    await ctx.send(embed=todo_add_card)
+
+    #Storing Todo Data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    sql = ("INSERT INTO todo VALUES(?,?,?)")
+    val = (ctx.guild.id, ctx.channel.id, todo_item)
+    cursor.execute(sql, val)
+    db.commit()
+    cursor.close()
+    db.close()
+
+@client.command()
+async def viewtodo(ctx):
+    viewtodo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
+
+    #Accessing data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT todo_item FROM todo WHERE guild_id = {ctx.guild.id}")
+    todos = [todo[0] for todo in cursor.fetchall()]
+
+    viewtodo_card.add_field(name="Tasks", value='>>> ' + '\n'.join(todos), inline=False)
+    await ctx.send(embed=viewtodo_card)
+
+#------------------------------------------------------------------
 @client.command() #Meeting Creation Command + Reminder
 async def meeting(ctx, *, information):
     info = information.strip().split()
@@ -498,7 +532,7 @@ async def timenow(ctx):
     now_utc = datetime.datetime.now(timezone('UTC'))
     now_london = now_utc.astimezone(timezone('Europe/London'))
     now_berlin = now_utc.astimezone(timezone('Europe/Berlin'))
-    now_cet = now_utc.astimezone(timezone('CET'))
+    #now_cet = now_utc.astimezone(timezone('CET'))
     now_israel = now_utc.astimezone(timezone('Israel'))
     now_dubai = now_utc.astimezone(timezone("Asia/Dubai"))
     now_pakistan = now_utc.astimezone(timezone('Asia/Karachi'))
@@ -511,7 +545,7 @@ async def timenow(ctx):
     now_edmonton = now_utc.astimezone(timezone('America/Edmonton'))   
     now_canada_east = now_utc.astimezone(timezone('Canada/Eastern'))
     now_central = now_utc.astimezone(timezone('US/Central'))
-    now_pacific = now_utc.astimezone(timezone('US/Pacific'))
+    #now_pacific = now_utc.astimezone(timezone('US/Pacific'))
 
     currenttime_card = discord.Embed(title="\U0001F551 Current International Times", colour = discord.Colour.green())
 
