@@ -91,8 +91,8 @@ async def meme(ctx):
 @client.command()
 async def vote(ctx):
     vote_card = discord.Embed(title="\U0001F3C6 Vote for Synergyy on Top.gg", description="Thanks for helping us grow!", colour = discord.Colour.green())
-    vote_card.add_field(name="Vote", value="[Click here to vote!](https://www.youtube.com)")
-    vote_card.set_footer(text="Tip: You can vote for us once every 12 hours.\nTip: Votes are worth double on weekends.")
+    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://www.youtube.com)")
+    vote_card.set_footer(text="Tip: You can vote once every 12 hours.\nTip: Votes are worth double on weekends.")
     await ctx.send(embed=vote_card)
 
 @client.command(pass_context=True) #Custom Help Command
@@ -101,18 +101,19 @@ async def help(ctx):
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!todo', value = 'Creates a new task.\n>>> eg. !todo Finish Powerpoint', inline=False)
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
     embed.add_field(name='!clear', value = 'Clears messages from the current channel.\n>>> Format: !clear (# of messages to clear)eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
     embed.add_field(name='!8ball', value = 'Asks the magical 8bakll for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming events.', inline=False)
+    embed.add_field(name='!delete', value = 'Delete upcoming events.', inline=False)
+    embed.add_field(name='!viewtodo', value = 'View your todo list tasks.', inline=False)  
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
-    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow!', inline=False)
-    #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
+    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow (its free)!', inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for more help!", inline=False)
     embed.set_footer(text="Tip: All commands can be invoked using !")
-
     await ctx.send(embed=embed)
-
 
 #------------------------------------------------------------------
 
