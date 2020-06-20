@@ -91,8 +91,8 @@ async def meme(ctx):
 @client.command()
 async def vote(ctx):
     vote_card = discord.Embed(title="\U0001F3C6 Vote for Synergyy on Top.gg", description="Thanks for helping us grow!", colour = discord.Colour.green())
-    vote_card.add_field(name="Vote", value="[Click here to vote!](https://www.youtube.com)")
-    vote_card.set_footer(text="Tip: You can vote for us once every 12 hours.\nTip: Votes are worth double on weekends.")
+    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://www.youtube.com)")
+    vote_card.set_footer(text="Tip: You can vote once every 12 hours.\nTip: Votes are worth double on weekends.")
     await ctx.send(embed=vote_card)
 
 @client.command(pass_context=True) #Custom Help Command
@@ -101,18 +101,53 @@ async def help(ctx):
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!todo', value = 'Creates a new task.\n>>> eg. !todo Finish Powerpoint', inline=False)
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
     embed.add_field(name='!clear', value = 'Clears messages from the current channel.\n>>> Format: !clear (# of messages to clear)eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
     embed.add_field(name='!8ball', value = 'Asks the magical 8bakll for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming events.', inline=False)
+    embed.add_field(name='!delete', value = 'Delete upcoming events.', inline=False)
+    embed.add_field(name='!viewtodo', value = 'View your todo list tasks.', inline=False)  
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
-    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow!', inline=False)
-    #embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.youtube.com/) for more help!", inline=False)
+    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow (its free)!', inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for more help!", inline=False)
     embed.set_footer(text="Tip: All commands can be invoked using !")
-
     await ctx.send(embed=embed)
 
+#------------------------------------------------------------------
+
+@client.command()
+async def todo(ctx, *, todo_item):
+    todo_add_card = discord.Embed(colour=discord.Color.green())
+    todo_add_card.add_field(name="To-Do Item Added!", value=f"**{todo_item}** was added to your todo list.")
+    todo_add_card.set_footer(text="Use !viewtodo to see your list and use !complete to check off items.")
+    await ctx.send(embed=todo_add_card)
+
+    #Storing Todo Data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    sql = ("INSERT INTO todo VALUES(?,?,?)")
+    val = (ctx.guild.id, ctx.channel.id, todo_item)
+    cursor.execute(sql, val)
+    db.commit()
+    cursor.close()
+    db.close()
+
+@client.command()
+async def viewtodo(ctx):
+    viewtodo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
+
+    #Accessing data
+    db = sqlite3.connect('main.sqlite')
+    cursor = db.cursor()
+    cursor.execute(f"SELECT todo_item FROM todo WHERE guild_id = {ctx.guild.id}")
+    todos = [todo[0] for todo in cursor.fetchall()]
+
+    viewtodo_card.add_field(name="Tasks", value='>>> ' + '\n'.join(todos), inline=False)
+    await ctx.send(embed=viewtodo_card)
+
+#------------------------------------------------------------------
 @client.command() #Meeting Creation Command + Reminder
 async def meeting(ctx, *, information):
     info = information.strip().split()
@@ -498,7 +533,7 @@ async def timenow(ctx):
     now_utc = datetime.datetime.now(timezone('UTC'))
     now_london = now_utc.astimezone(timezone('Europe/London'))
     now_berlin = now_utc.astimezone(timezone('Europe/Berlin'))
-    now_cet = now_utc.astimezone(timezone('CET'))
+    #now_cet = now_utc.astimezone(timezone('CET'))
     now_israel = now_utc.astimezone(timezone('Israel'))
     now_dubai = now_utc.astimezone(timezone("Asia/Dubai"))
     now_pakistan = now_utc.astimezone(timezone('Asia/Karachi'))
@@ -511,7 +546,7 @@ async def timenow(ctx):
     now_edmonton = now_utc.astimezone(timezone('America/Edmonton'))   
     now_canada_east = now_utc.astimezone(timezone('Canada/Eastern'))
     now_central = now_utc.astimezone(timezone('US/Central'))
-    now_pacific = now_utc.astimezone(timezone('US/Pacific'))
+    #now_pacific = now_utc.astimezone(timezone('US/Pacific'))
 
     currenttime_card = discord.Embed(title="\U0001F551 Current International Times", colour = discord.Colour.green())
 
