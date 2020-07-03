@@ -118,10 +118,10 @@ async def help(ctx):
 #------------------------------------------------------------------
 
 @client.command()
-async def todo(ctx, *, todo_item):
-    todo_add_card = discord.Embed(colour=discord.Color.green())
-    todo_add_card.add_field(name="To-Do Item Added!", value=f"**{todo_item}** was added to your todo list.")
-    todo_add_card.set_footer(text="Use !viewtodo to see your list and use !complete to check off items.")
+async def addtodo(ctx, *, todo_item):
+    todo_add_card = discord.Embed(title="To-Do Item Added!", colour=discord.Color.green())
+    todo_add_card.add_field(name="Item Added:", value=f">>> **{todo_item}** was added to your todo list.")
+    todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.")
     await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
@@ -135,17 +135,62 @@ async def todo(ctx, *, todo_item):
     db.close()
 
 @client.command()
-async def viewtodo(ctx):
-    viewtodo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
+async def todo(ctx):
+    todo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
+    completed_embed = discord.Embed(title='Todo Item Completed!', colour=discord.Colour.green())
 
     #Accessing data
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
     cursor.execute(f"SELECT todo_item FROM todo WHERE guild_id = {ctx.guild.id}")
-    todos = [todo[0] for todo in cursor.fetchall()]
+    todos = [[todo[0]] for todo in cursor.fetchall()]
 
-    viewtodo_card.add_field(name="Tasks", value='>>> ' + '\n'.join(todos), inline=False)
-    await ctx.send(embed=viewtodo_card)
+    for i in range(len(todos)):
+        todos[i].insert(0, unicode_block[i])
+
+    #Displaying todo items
+    values = []
+    for todo in todos:
+        values.append(f"{todo[0]} - **{str(todo[1])}**")
+    if values:
+        todo_card.add_field(name="Tasks", value='>>> ' + '\n'.join(values), inline=False)
+        todo_card.set_footer(text="Select the corresponding emojis and press the ✅ to complete your items.")
+
+        #Get complete choices
+        message1 = await ctx.send(embed=todo_card)
+        for todo in todos:
+            await message1.add_reaction(emoji=todo[0])
+        await message1.add_reaction(emoji='✅')
+
+        tb_deleted = []
+        while True:
+            message1 = await ctx.fetch_message(message1.id)
+            counts = {react.emoji: react.count for react in message1.reactions}
+            if counts['✅'] > 1:
+                for count in counts:
+                    if counts[count] > 1:
+                        tb_deleted.append(count)
+                break
+        
+        #Delete choices
+        dtodos = []
+        for todo in todos:
+            for dl in tb_deleted:
+                if todo[0] == dl:
+                    sql = 'DELETE FROM todo WHERE todo_item=? AND guild_id=?'
+                    val = (todo[1], ctx.guild.id)
+                    cursor.execute(sql, val)
+                    dtodos.append(todo[1])
+        deleted_todos = "\n".join(f"**{d}** successfully deleted" for d in dtodos)
+        completed_embed.add_field(name='Item Deleted:', value='>>> ' + deleted_todos, inline=False)
+
+        db.commit()
+        cursor.close()
+        db.close()
+        await ctx.send(embed=completed_embed)
+    else:
+        todo_card.description = "No current todo items at this time."
+        await ctx.send(embed=todo_card)
 
 #------------------------------------------------------------------
 @client.command() #Meeting Creation Command + Reminder
@@ -208,8 +253,8 @@ async def meeting(ctx, *, information):
     #Data Storage
     db = sqlite3.connect('main.sqlite')
     cursor = db.cursor()
-    sql = ("INSERT INTO meetings VALUES(?,?,?,?)")
-    val = (ctx.guild.id, ctx.channel.id, name, m_time)
+    sql = ("INSERT INTO meetings VALUES(?,?,?,?,?)")
+    val = (ctx.guild.id, ctx.channel.id, name, m_time, None)
     cursor.execute(sql, val)
     db.commit()
     cursor.close()
@@ -220,6 +265,7 @@ async def meeting(ctx, *, information):
     meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
     meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
     confirmation = await ctx.send(content=None, embed=meeting_card)
+    await confirmation.add_reaction(emoji='✅')
     await asyncio.sleep(m_time-now)
 
     #Check if event still exists
@@ -247,9 +293,18 @@ async def meeting(ctx, *, information):
         #     await asyncio.sleep(900)
         
     #Meeting DM Reminder
+        rvsp = []
+        message = await ctx.channel.fetch_message(confirmation.id)
+        for reaction in message.reactions:
+            if str(reaction) == '✅':
+                rvsp = await reaction.users().flatten()
+            rvsp = rvsp[1:]
+
         url = "http://discordapp.com/channels/" + str(confirmation.guild.id) + '/' + str(confirmation.channel.id) + '/' + str(confirmation.id)
         reminder_card = discord.Embed(description=f"Hey! This is a reminder about your meeting, [{name}]({url}).\nHead over to your team's discord server to participate!", colour = discord.Colour.green())
-        await ctx.author.send(content=None, embed=reminder_card)
+        for member in rvsp:
+            dm = await member.create_dm()
+            await dm.send(embed=reminder_card)
 
         #Meeting Server Announce
         announce = discord.Embed(colour=discord.Colour.green())
@@ -356,7 +411,7 @@ async def list(ctx): #List command that lists all upcoming meetings
 
 @client.command()
 async def delete(ctx, *, name=None):
-    deleted_embed = discord.Embed(title='Meeting Deleted', colour=discord.Colour.green())
+    deleted_embed = discord.Embed(title='Delete Meeting', colour=discord.Colour.green())
     if name:
         gt_10 = False
 
@@ -376,7 +431,7 @@ async def delete(ctx, *, name=None):
             db.commit()
             cursor.close()
             db.close()
-            deleted_embed.add_field(name='\u200b', value=f'>>> {name} successfully deleted')
+            deleted_embed.add_field(name='Meeting Deleted:', value=f'>>> {name} successfully deleted')
             await ctx.send(embed=deleted_embed)
             return
 
@@ -615,6 +670,7 @@ async def meeting_error(ctx, error):
         await ctx.send(content=None, embed=time_missing)
     else:
         await ctx.send(content=None, embed=format_error)
+        print(error)
 
 @poll.error
 async def poll_error(ctx, error):
@@ -631,6 +687,18 @@ async def list_error(ctx, error):
 
 @delete.error
 async def delete_error(ctx, error):
+    print(error)
+
+@addtodo.error
+async def addtodo_error(ctx, error):
+    item_missing = discord.Embed(title='Missing Todo Item!', description="For further help, please refer to !help", colour=discord.Color.green())
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(content=None, embed=item_missing)
+    else:
+        print(error)
+
+@todo.error
+async def todo_error(ctx, error):
     print(error)
 
 #Other Functions------------------------------------------
