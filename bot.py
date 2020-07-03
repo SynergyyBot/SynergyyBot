@@ -51,7 +51,6 @@ async def clear(ctx, amount=None):
         nonnumeric_card = discord.Embed(title="Error!", description="The value after !clear must be a number.\neg. !clear 50\nPlease refer to !help for more info.", colour=discord.Colour.green())
         await ctx.send(embed=nonnumeric_card)
 
-
 @client.command() #Coinflip Command
 async def flip(ctx):
     choices = ["Heads", "Tails"]
@@ -101,13 +100,15 @@ async def help(ctx):
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
-    embed.add_field(name='!todo', value = 'Creates a new task.\n>>> eg. !todo Finish Powerpoint', inline=False)
+    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
     embed.add_field(name='!clear', value = 'Clears messages from the current channel.\n>>> Format: !clear (# of messages to clear)eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
     embed.add_field(name='!8ball', value = 'Asks the magical 8bakll for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
+    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming events.', inline=False)
     embed.add_field(name='!delete', value = 'Delete upcoming events.', inline=False)
-    embed.add_field(name='!viewtodo', value = 'View your todo list tasks.', inline=False)  
+    embed.add_field(name='!viewtodo', value = 'View your todo list and mamage its items.', inline=False)  
+    embed.add_field(name='!timenow', value = 'Lists times all around the world.', inline=False)  
     embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
     embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
     embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow (its free)!', inline=False)
@@ -181,8 +182,8 @@ async def todo(ctx):
                     val = (todo[1], ctx.guild.id)
                     cursor.execute(sql, val)
                     dtodos.append(todo[1])
-        deleted_todos = "\n".join(f"**{d}** successfully deleted" for d in dtodos)
-        completed_embed.add_field(name='Item Deleted:', value='>>> ' + deleted_todos, inline=False)
+        deleted_todos = "\n".join(f"**{d}** successfully completed!" for d in dtodos)
+        completed_embed.add_field(name='Items Completed:', value='>>> ' + deleted_todos, inline=False)
 
         db.commit()
         cursor.close()
@@ -715,6 +716,7 @@ def has_date(string, fuzzy=True):
 
     except ValueError:
         return False
+
 
 #Bot Token Pairing--------------------------------
 client.run(read_token())
