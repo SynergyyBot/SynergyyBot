@@ -178,12 +178,15 @@ async def todo(ctx):
                     cursor.execute(sql, val)
                     dtodos.append(todo[1])
         deleted_todos = "\n".join(f"**{d}** successfully completed!" for d in dtodos)
-        completed_embed.add_field(name='Items Completed:', value='>>> ' + deleted_todos, inline=False)
-
-        db.commit()
-        cursor.close()
-        db.close()
-        await ctx.send(embed=completed_embed)
+        if not dtodos:
+            todo_opt_missing = discord.Embed(title='No Todo Item Selected!', description="Please try again and select a todo item to complete using the reactions.", colour=discord.Color.green())
+            await ctx.send(embed=todo_opt_missing)
+        else:
+            completed_embed.add_field(name='Items Completed:', value='>>> ' + deleted_todos, inline=False)
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(embed=completed_embed)
     else:
         todo_card.description = "No current todo items at this time."
         await ctx.send(embed=todo_card)
@@ -495,13 +498,18 @@ async def delete(ctx, *, name=None):
                     cursor.execute(sql, val)
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
-        deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
 
-        db.commit()
-        cursor.close()
-        db.close()
-        await ctx.send(embed=deleted_embed)
-    
+        if not dmeetings:
+            meeting_opt_missing = discord.Embed(title="No Meeting Selected!", description="Please try again and select a meetnig to delete using the reactions.")
+            await ctx.send(embed=meeting_opt_missing)
+        else:
+            deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
+
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(embed=deleted_embed)
+        
     else:
         gt_10 = False
 
