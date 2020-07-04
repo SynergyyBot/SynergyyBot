@@ -51,7 +51,6 @@ async def clear(ctx, amount=None):
         nonnumeric_card = discord.Embed(title="Error!", description="The value after !clear must be a number.\neg. !clear 50\nPlease refer to !help for more info.", colour=discord.Colour.green())
         await ctx.send(embed=nonnumeric_card)
 
-
 @client.command() #Coinflip Command
 async def flip(ctx):
     choices = ["Heads", "Tails"]
@@ -101,17 +100,14 @@ async def help(ctx):
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
     embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
-    embed.add_field(name='!todo', value = 'Creates a new task.\n>>> eg. !todo Finish Powerpoint', inline=False)
+    embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
+    embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
+
+    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
+    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
+
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
-    embed.add_field(name='!clear', value = 'Clears messages from the current channel.\n>>> Format: !clear (# of messages to clear)eg. !clear 10\nNote: If no number is provided, 10 is the default value.', inline=False)
-    embed.add_field(name='!8ball', value = 'Asks the magical 8bakll for an answer to your question.\n>>> eg. !8ball Will I become succesful?', inline=False)
-    embed.add_field(name='!list', value = 'Lists all upcoming events.', inline=False)
-    embed.add_field(name='!delete', value = 'Delete upcoming events.', inline=False)
-    embed.add_field(name='!viewtodo', value = 'View your todo list tasks.', inline=False)  
-    embed.add_field(name='!ping', value = 'Returns the bot\'s latency.', inline=False)
-    embed.add_field(name='!flip', value = 'Flips a coin!', inline=False)
-    embed.add_field(name='!vote', value = 'Vote for us on Top.gg to help us grow (its free)!', inline=False)
-    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for more help!", inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for the full list of commands!", inline=False)
     embed.set_footer(text="Tip: All commands can be invoked using !")
     await ctx.send(embed=embed)
 
@@ -181,13 +177,16 @@ async def todo(ctx):
                     val = (todo[1], ctx.guild.id)
                     cursor.execute(sql, val)
                     dtodos.append(todo[1])
-        deleted_todos = "\n".join(f"**{d}** successfully deleted" for d in dtodos)
-        completed_embed.add_field(name='Item Deleted:', value='>>> ' + deleted_todos, inline=False)
-
-        db.commit()
-        cursor.close()
-        db.close()
-        await ctx.send(embed=completed_embed)
+        deleted_todos = "\n".join(f"**{d}** successfully completed!" for d in dtodos)
+        if not dtodos:
+            todo_opt_missing = discord.Embed(title='No Todo Item Selected!', description="Please try again and select a todo item to complete using the reactions.", colour=discord.Color.green())
+            await ctx.send(embed=todo_opt_missing)
+        else:
+            completed_embed.add_field(name='Items Completed:', value='>>> ' + deleted_todos, inline=False)
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(embed=completed_embed)
     else:
         todo_card.description = "No current todo items at this time."
         await ctx.send(embed=todo_card)
@@ -464,9 +463,9 @@ async def delete(ctx, *, name=None):
             date = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%b %-d, %Y')
             time = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%-I:%M%p')
             values.append(f"{meetings[i][0]} - **{str(meetings[i][1])}** on {date} at {time}")
-        delete_options = discord.Embed(title='Delete Event', colour=discord.Colour.green())
-        delete_options.add_field(name="Select events to delete", value='>>> ' + '\n'.join(values), inline=False)
-        delete_options.set_footer(text="Use the reactions below to select which events to delete, then click the checkmark to confirm.")
+        delete_options = discord.Embed(title='Delete Meeting', colour=discord.Colour.green())
+        delete_options.add_field(name="Select meetings to delete", value='>>> ' + '\n'.join(values), inline=False)
+        delete_options.set_footer(text="Use the reactions below to select which meetings to delete, then click the checkmark to confirm.")
 
         #If original meetings list was greater than 10
         if gt_10:
@@ -499,13 +498,18 @@ async def delete(ctx, *, name=None):
                     cursor.execute(sql, val)
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
-        deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
 
-        db.commit()
-        cursor.close()
-        db.close()
-        await ctx.send(embed=deleted_embed)
-    
+        if not dmeetings:
+            meeting_opt_missing = discord.Embed(title="No Meeting Selected!", description="Please try again and select a meetnig to delete using the reactions.")
+            await ctx.send(embed=meeting_opt_missing)
+        else:
+            deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
+
+            db.commit()
+            cursor.close()
+            db.close()
+            await ctx.send(embed=deleted_embed)
+        
     else:
         gt_10 = False
 
@@ -540,8 +544,8 @@ async def delete(ctx, *, name=None):
             date = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%b %-d, %Y')
             time = datetime.datetime.fromtimestamp(int(meetings[i][2])).strftime('%-I:%M%p')
             values.append(f"{meetings[i][0]} - **{str(meetings[i][1])}** on {date} at {time}")
-        delete_options = discord.Embed(title='Delete Event', colour=discord.Colour.green())
-        delete_options.add_field(name="Select events to delete", value='>>> ' + '\n'.join(values), inline=False)
+        delete_options = discord.Embed(title='Delete Meeting', colour=discord.Colour.green())
+        delete_options.add_field(name="Select meetings to delete", value='>>> ' + '\n'.join(values), inline=False)
         
         #If original meetings list was greater than 10
         if gt_10:
