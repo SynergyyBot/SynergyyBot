@@ -259,10 +259,19 @@ async def meeting(ctx, *, information):
     cursor.close()
     db.close()
 
+    #Create Google Calendar Link
+    google_date = datetime.datetime.fromtimestamp(m_time).strftime('%Y%m%d')
+    google_time = datetime.datetime.fromtimestamp(m_time).strftime('%H%M%S')
+    google_end_date = datetime.datetime.fromtimestamp(m_time + 3600).strftime('%Y%m%d')
+    google_end_time = datetime.datetime.fromtimestamp(m_time + 3600).strftime('%H%M%S')
+    google_name = '+'.join(name.split())
+    google_link = 'https://www.google.com/calendar/render?action=TEMPLATE&text='+google_name+'&details=Event+created+by+Synergyy&dates='+google_date+'T'+google_time+'/'+google_end_date+'T'+google_end_time
+    print(google_link)
+
     #Meeting Confirmation
-    meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", colour=discord.Colour.green())
+    meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", url=google_link, colour=discord.Colour.green())
     meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-    meeting_card.set_footer(text=f"Tip: I will remind you about this meeting when its starting!")
+    meeting_card.set_footer(text="Tip: I will remind you about this meeting when its starting!\nTip: Click the title to add this event to Google Calendar!")
     confirmation = await ctx.send(content=None, embed=meeting_card)
     await confirmation.add_reaction(emoji='✅')
     await asyncio.sleep(m_time-now)
