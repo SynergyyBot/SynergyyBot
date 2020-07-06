@@ -10,6 +10,11 @@ from dateutil.parser import parse
 import sqlite3
 from operator import itemgetter
 from pytz import timezone
+import pickle
+import os.path
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -17,6 +22,7 @@ unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮',
 client = commands.Bot(command_prefix='!')
 client.timer_manager = timers.TimerManager(client)
 client.remove_command("help")
+SCOPES = ['https://www.googleapis.com/auth/tasks']
 
 #On Ready Event------------------------------------------
 
@@ -99,7 +105,7 @@ async def help(ctx):
     embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
-    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, it can easily be added to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
     embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
 
@@ -117,8 +123,8 @@ async def help(ctx):
 async def addtodo(ctx, *, todo_item):
     todo_add_card = discord.Embed(title="To-Do Item Added!", colour=discord.Color.green())
     todo_add_card.add_field(name="Item Added:", value=f">>> **{todo_item}** was added to your todo list.")
-    todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.")
-    await ctx.send(embed=todo_add_card)
+    todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.\nClick the emoji below to add this task to your Google Tasks.")
+    message2 = await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
     db = sqlite3.connect('main.sqlite')
@@ -129,6 +135,92 @@ async def addtodo(ctx, *, todo_item):
     db.commit()
     cursor.close()
     db.close()
+
+    #Reaction Viewer
+    await message2.add_reaction(emoji='✅')
+    channel = message2.channel
+
+    def check(reaction, user):
+        return str(reaction.emoji) == '✅' and user == message2.author #this is the line thats not working
+
+    try:
+
+        reaction = await client.wait_for('reaction_add', check=check)
+    
+    except:
+        pass
+    
+    else:       
+        creds = None
+        if os.path.exists('token.pickle'):
+            with open('token.pickle', 'rb') as token:
+                creds = pickle.load(token)
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    'credentials.json', SCOPES)
+                creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run *************** ALTER THIS ******************
+            # with open('token.pickle', 'wb') as token:
+            #     pickle.dump(creds, token)
+
+        service = build('tasks', 'v1', credentials=creds)
+
+        #call the Tasks API
+        results = service.tasklists().list(maxResults=30).execute()
+        items = results.get('items', [])
+
+        if not items:
+            print('No task lists found.')
+        else:
+            #print('Task lists:')
+            for item in items:
+                #print(u'{0} ({1})'.format(item['title'], item['id']))
+                if item['title'] == "Synergyy Todo List":
+                    task = {
+                    'title': todo_item,
+                    'notes': f'Created by Synergyy from {ctx.guild.name}',
+                    }
+
+                    result = service.tasks().insert(tasklist=item['id'], body=task).execute()
+                    #print (result['id'])
+                    print ("Synergyy Todo List found and item added.")
+                    
+                    confirm_card = discord.Embed(colour=discord.Colour.green())
+                    confirm_card.add_field(name= '\u200b', value=f'The task **{todo_item}** from **{ctx.guild.name}** has been added to your Google Tasks.')
+                    await ctx.author.send(content=None, embed=confirm_card)
+                    
+                    break
+
+                else:
+                    print ("Not Synergyy Todo List")
+
+                    if (item == items[-1]):
+                        print("last Item")
+                        tasklist = {
+                            'title': 'Synergyy Todo List'
+                        }
+                            
+                        result = service.tasklists().insert(body=tasklist).execute()
+                        synergyy_list_id = result['id']
+                        print (synergyy_list_id)
+
+                        task = {
+                        'title': todo_item,
+                        'notes': f'Created by Synergyy from {ctx.guild.name}',
+                        }
+                        result = service.tasks().insert(tasklist=synergyy_list_id, body=task).execute()
+                        print (result['id'])
+                        #print ("Synergyy Todo List found and item added.")
+
+                        confirm_card = discord.Embed(colour=discord.Colour.green())
+                        confirm_card.add_field(name= '\u200b', value=f'The task **{todo_item}** from **{ctx.guild.name}** has been added to your Google Tasks.')
+                        await ctx.author.send(content=None, embed=confirm_card)
+
+#-----------------------------------------------------------------
 
 @client.command()
 async def todo(ctx):
@@ -728,6 +820,6 @@ def has_date(string, fuzzy=True):
 
     except ValueError:
         return False
-
+        
 #Bot Token Pairing--------------------------------
 client.run(read_token())
