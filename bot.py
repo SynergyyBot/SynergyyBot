@@ -99,7 +99,7 @@ async def help(ctx):
     embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
-    embed.add_field(name='!meeting', value = 'Creates a new meeting.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, it can easily be added to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
     embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
 
