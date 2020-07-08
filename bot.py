@@ -17,6 +17,7 @@ unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮',
 client = commands.Bot(command_prefix='!')
 client.timer_manager = timers.TimerManager(client)
 client.remove_command("help")
+SCOPES = ['https://www.googleapis.com/auth/tasks']
 
 #On Ready Event------------------------------------------
 
@@ -90,7 +91,7 @@ async def meme(ctx):
 @client.command()
 async def vote(ctx):
     vote_card = discord.Embed(title="\U0001F3C6 Vote for Synergyy on Top.gg", description="Thanks for helping us grow!", colour = discord.Colour.green())
-    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://www.youtube.com)")
+    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://top.gg/bot/719271108037312595)")
     vote_card.set_footer(text="Tip: You can vote once every 12 hours.\nTip: Votes are worth double on weekends.")
     await ctx.send(embed=vote_card)
 
@@ -99,7 +100,7 @@ async def help(ctx):
     embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
     #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
-    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, it can easily be added to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
     embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
     embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
 
@@ -107,15 +108,13 @@ async def help(ctx):
     embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
 
     embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
-    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for the full list of commands!", inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.synergyy.ml/) for the full list of commands!\nVote for us on [top.gg](https://top.gg/bot/719271108037312595) to help us grow!", inline=False)
     embed.set_footer(text="Tip: All commands can be invoked using !")
     await ctx.send(embed=embed)
 
-#------------------------------------------------------------------
-
 @client.command()
 async def addtodo(ctx, *, todo_item):
-    todo_add_card = discord.Embed(title="To-Do Item Added!", colour=discord.Color.green())
+    todo_add_card = discord.Embed(title="\U0001F4CB To-Do Item Added!", colour=discord.Color.green())
     todo_add_card.add_field(name="Item Added:", value=f">>> **{todo_item}** was added to your todo list.")
     todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.")
     await ctx.send(embed=todo_add_card)
@@ -191,7 +190,6 @@ async def todo(ctx):
         todo_card.description = "No current todo items at this time."
         await ctx.send(embed=todo_card)
 
-#------------------------------------------------------------------
 @client.command() #Meeting Creation Command + Reminder
 async def meeting(ctx, *, information):
     info = information.strip().split()
