@@ -5,4 +5,4 @@ asyncio
 pytz
 word2number
 python-dateutil
-
+discord-timers
