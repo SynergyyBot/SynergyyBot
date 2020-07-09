@@ -17,7 +17,6 @@ unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮',
 client = commands.Bot(command_prefix='!')
 client.timer_manager = timers.TimerManager(client)
 client.remove_command("help")
-SCOPES = ['https://www.googleapis.com/auth/tasks']
 
 #On Ready Event------------------------------------------
 
@@ -35,6 +34,20 @@ async def on_command_error(ctx, error):
         await ctx.send(content=None, embed=command_not_found)
 
 #Commands-------------------------------------------------
+
+@client.command(pass_context=True) #Custom Help Command
+async def help(ctx):
+    embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green())
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
+    embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
+    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
+    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
+    embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.synergyy.ml/) for the full list of commands!\nVote for us on [top.gg](https://top.gg/bot/719271108037312595) to help us grow!", inline=False)
+    embed.set_footer(text="Tip: All commands can be invoked using !")
+    await ctx.send(embed=embed)
 
 @client.command() #Ping Command
 async def ping(ctx):
@@ -94,23 +107,6 @@ async def vote(ctx):
     vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://top.gg/bot/719271108037312595)")
     vote_card.set_footer(text="Tip: You can vote once every 12 hours.\nTip: Votes are worth double on weekends.")
     await ctx.send(embed=vote_card)
-
-@client.command(pass_context=True) #Custom Help Command
-async def help(ctx):
-    embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
-    #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
-    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
-    embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
-    embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
-
-    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
-    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
-
-    embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
-    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.synergyy.ml/) for the full list of commands!\nVote for us on [top.gg](https://top.gg/bot/719271108037312595) to help us grow!", inline=False)
-    embed.set_footer(text="Tip: All commands can be invoked using !")
-    await ctx.send(embed=embed)
 
 @client.command()
 async def addtodo(ctx, *, todo_item):
@@ -283,21 +279,6 @@ async def meeting(ctx, *, information):
     data = cursor.fetchone()
     
     if data:
-        # if m_time-now-900 >= 0:
-        #     await asyncio.sleep((m_time-now)-900)
-
-        #     #DM 15 Min Reminder
-        #     _15min_card = discord.Embed(colour = discord.Colour.green())
-        #     _15min_card.add_field(name= "Reminder!", value = f"Your meeting, **{name}** is starting in **15** minutes!\n Head over to your teams server to participate.")
-        #     await ctx.author.send(content=None, embed=_15min_card)
-
-        #     #15 Min Announce
-        #     _15_announce = discord.Embed(colour=discord.Colour.green())
-        #     _15_announce.add_field(name="Reminder!", value =f"The meeting **{name}** will start in **15** minutes!")
-        #     await ctx.send(embed=_15_announce)
-
-        #     await asyncio.sleep(900)
-        
     #Meeting DM Reminder
         rvsp = []
         message = await ctx.channel.fetch_message(confirmation.id)
@@ -345,7 +326,6 @@ async def poll(ctx, *, information): #Poll command
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
         
         if len(op) <= 20:
-
             options = {}
             for i in range(len(op)):
                 options[unicode_block[i]] = op[i]
@@ -362,12 +342,9 @@ async def poll(ctx, *, information): #Poll command
             polltimeinminutes *= 60
             await asyncio.sleep(polltimeinminutes)
             message_1 = await ctx.fetch_message(message_1.id)
-
             counts = {react.emoji: react.count for react in message_1.reactions}
             winner = max(options, key=counts.get)
-
             winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
-
             await ctx.send(embed=winner_card)
         
         else:
