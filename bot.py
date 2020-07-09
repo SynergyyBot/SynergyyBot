@@ -705,4 +705,4 @@ def has_date(string, fuzzy=True):
         return False
 
 #Bot Token Pairing--------------------------------
-client.run(read_token())
+client.run(os.environ['DISCORD_TOKEN'])
