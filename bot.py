@@ -10,6 +10,7 @@ from dateutil.parser import parse
 import sqlite3
 from operator import itemgetter
 from pytz import timezone
+import psycopg2
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -116,11 +117,24 @@ async def addtodo(ctx, *, todo_item):
     await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
-    db = sqlite3.connect('main.sqlite')
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
     cursor = db.cursor()
-    sql = ("INSERT INTO todo VALUES(?,?,?)")
+    create_table_query = '''CREATE TABLE IF NOT EXISTS todo
+          (GUILD bigint      NOT NULL,
+          CHANNEL           bigint    NOT NULL,
+          TODO_ITEM         TEXT); '''
+    
+    cursor.execute(create_table_query)
+    db.commit()
+
+    psql = ("INSERT INTO todo (GUILD, CHANNEL, TODO_ITEM) VALUES(%s, %s, %s)")
     val = (ctx.guild.id, ctx.channel.id, todo_item)
-    cursor.execute(sql, val)
+    cursor.execute(psql, val)
+
     db.commit()
     cursor.close()
     db.close()
@@ -128,12 +142,17 @@ async def addtodo(ctx, *, todo_item):
 @client.command()
 async def todo(ctx):
     todo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
-    completed_embed = discord.Embed(title='Todo Item Completed!', colour=discord.Colour.green())
+    completed_embed = discord.Embed(title='\U0001F4CB Todo Item Completed!', colour=discord.Colour.green())
 
     #Accessing data
-    db = sqlite3.connect('main.sqlite')
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
+
     cursor = db.cursor()
-    cursor.execute(f"SELECT todo_item FROM todo WHERE guild_id = {ctx.guild.id}")
+    cursor.execute(f"SELECT TODO_ITEM FROM todo WHERE GUILD = {ctx.guild.id}")
     todos = [[todo[0]] for todo in cursor.fetchall()]
 
     for i in range(len(todos)):
@@ -162,16 +181,19 @@ async def todo(ctx):
                     if counts[count] > 1:
                         tb_deleted.append(count)
                 break
-        
+
         #Delete choices
         dtodos = []
         for todo in todos:
             for dl in tb_deleted:
                 if todo[0] == dl:
-                    sql = 'DELETE FROM todo WHERE todo_item=? AND guild_id=?'
-                    val = (todo[1], ctx.guild.id)
-                    cursor.execute(sql, val)
+                    val = (todo[1])
+                    sql_delete_query = 'Delete from todo where todo_item = %s AND todo.guild=%s'
+                    cursor.execute(sql_delete_query, (val, ctx.guild.id,))
+                    rows_deleted = cursor.rowcount
+                    db.commit()
                     dtodos.append(todo[1])
+        
         deleted_todos = "\n".join(f"**{d}** successfully completed!" for d in dtodos)
         if not dtodos:
             todo_opt_missing = discord.Embed(title='No Todo Item Selected!', description="Please try again and select a todo item to complete using the reactions.", colour=discord.Color.green())
