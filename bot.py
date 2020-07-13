@@ -10,11 +10,7 @@ from dateutil.parser import parse
 import sqlite3
 from operator import itemgetter
 from pytz import timezone
-import pickle
-import os.path
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+import psycopg2
 
 timescales = ['sec', 'second', 'min', 'minute', 'hour', 'day', 'week', 'month', 'year'] # right now only supports up to week
 unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮','🇯','🇰','🇱','🇲','🇳','🇴','🇵','🇶','🇷','🇸','🇹','🇺','🇻','🇼','🇽','🇾','🇿']
@@ -22,7 +18,6 @@ unicode_block = ['🇦','🇧','🇨','🇩','🇪','🇫','🇬','🇭','🇮',
 client = commands.Bot(command_prefix='!')
 client.timer_manager = timers.TimerManager(client)
 client.remove_command("help")
-SCOPES = ['https://www.googleapis.com/auth/tasks']
 
 #On Ready Event------------------------------------------
 
@@ -40,6 +35,20 @@ async def on_command_error(ctx, error):
         await ctx.send(content=None, embed=command_not_found)
 
 #Commands-------------------------------------------------
+
+@client.command(pass_context=True) #Custom Help Command
+async def help(ctx):
+    embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green())
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
+    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
+    embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
+    embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
+    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
+    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
+    embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
+    embed.add_field(name='-------------------------------------', value = "Visit our [website](https://www.synergyy.ml/) for the full list of commands!\nVote for us on [top.gg](https://top.gg/bot/719271108037312595) to help us grow!", inline=False)
+    embed.set_footer(text="Tip: All commands can be invoked using !")
+    await ctx.send(embed=embed)
 
 @client.command() #Ping Command
 async def ping(ctx):
@@ -96,141 +105,54 @@ async def meme(ctx):
 @client.command()
 async def vote(ctx):
     vote_card = discord.Embed(title="\U0001F3C6 Vote for Synergyy on Top.gg", description="Thanks for helping us grow!", colour = discord.Colour.green())
-    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://www.youtube.com)")
+    vote_card.add_field(name="Vote", value="[Click here to vote for free!](https://top.gg/bot/719271108037312595)")
     vote_card.set_footer(text="Tip: You can vote once every 12 hours.\nTip: Votes are worth double on weekends.")
     await ctx.send(embed=vote_card)
 
-@client.command(pass_context=True) #Custom Help Command
-async def help(ctx):
-    embed = discord.Embed(title="\U00002754	Help", colour = discord.Colour.green(),)
-    #embed.set_author(name='Help', icon_url="https://cdn.discordapp.com/attachments/717853456244670509/718935942605439006/Screen_Shot_2020-06-06_at_5.14.29_PM.png")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/717853456244670509/718950987762761758/SynergyyNoBg.png")
-    embed.add_field(name='!meeting', value = 'Creates a new meeting.\nOnce the meeting is created, you can easily add it to your google calendar.\n>>> eg. !meeting "Physics Project" in 2 hours\neg. !meeting "Math Meeting!" on 8/21 at 9:30 PM\neg. !meeting "Team Discussion" on June 19 at 3pm', inline=False)
-    embed.add_field(name='!list', value = 'Lists all upcoming meetings.', inline=False)
-    embed.add_field(name='!delete', value = 'Delete upcoming meetings.', inline=False)
-
-    embed.add_field(name='!addtodo', value = 'Creates a new task.\n>>> eg. !addtodo Finish Powerpoint', inline=False)
-    embed.add_field(name='!todo', value = 'Allows you to view and complete items in your todo list.', inline=False)
-
-    embed.add_field(name='!poll', value = 'Creates a new poll.\n>>> Format: !poll "Title" options (poll time limit in minutes)\neg. !poll "Favourite Food?" Pizza, Sushi, Tacos 2\nNote: The poll must have atleast 2 options.', inline=False)
-    embed.add_field(name='-------------------------------------', value = "Visit our [website](#) for the full list of commands!", inline=False)
-    embed.set_footer(text="Tip: All commands can be invoked using !")
-    await ctx.send(embed=embed)
-
-#------------------------------------------------------------------
-
 @client.command()
 async def addtodo(ctx, *, todo_item):
-    todo_add_card = discord.Embed(title="To-Do Item Added!", colour=discord.Color.green())
+    todo_add_card = discord.Embed(title="\U0001F4CB To-Do Item Added!", colour=discord.Color.green())
     todo_add_card.add_field(name="Item Added:", value=f">>> **{todo_item}** was added to your todo list.")
-    todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.\nClick the emoji below to add this task to your Google Tasks.")
-    message2 = await ctx.send(embed=todo_add_card)
+    todo_add_card.set_footer(text="Use !todo to see your list and to check off items when you complete them.")
+    await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
-    db = sqlite3.connect('main.sqlite')
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
     cursor = db.cursor()
-    sql = ("INSERT INTO todo VALUES(?,?,?)")
+    create_table_query = '''CREATE TABLE IF NOT EXISTS todo
+          (GUILD bigint      NOT NULL,
+          CHANNEL           bigint    NOT NULL,
+          TODO_ITEM         TEXT); '''
+    
+    cursor.execute(create_table_query)
+    db.commit()
+
+    psql = ("INSERT INTO todo (GUILD, CHANNEL, TODO_ITEM) VALUES(%s, %s, %s)")
     val = (ctx.guild.id, ctx.channel.id, todo_item)
-    cursor.execute(sql, val)
+    cursor.execute(psql, val)
+
     db.commit()
     cursor.close()
     db.close()
 
-    #Reaction Viewer
-    await message2.add_reaction(emoji='✅')
-    channel = message2.channel
-
-    def check(reaction, user):
-        return str(reaction.emoji) == '✅' and user == message2.author #this is the line thats not working
-
-    try:
-
-        reaction = await client.wait_for('reaction_add', check=check)
-    
-    except:
-        pass
-    
-    else:       
-        creds = None
-        if os.path.exists('token.pickle'):
-            with open('token.pickle', 'rb') as token:
-                creds = pickle.load(token)
-        # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES)
-                creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run *************** ALTER THIS ******************
-            # with open('token.pickle', 'wb') as token:
-            #     pickle.dump(creds, token)
-
-        service = build('tasks', 'v1', credentials=creds)
-
-        #call the Tasks API
-        results = service.tasklists().list(maxResults=30).execute()
-        items = results.get('items', [])
-
-        if not items:
-            print('No task lists found.')
-        else:
-            #print('Task lists:')
-            for item in items:
-                #print(u'{0} ({1})'.format(item['title'], item['id']))
-                if item['title'] == "Synergyy Todo List":
-                    task = {
-                    'title': todo_item,
-                    'notes': f'Created by Synergyy from {ctx.guild.name}',
-                    }
-
-                    result = service.tasks().insert(tasklist=item['id'], body=task).execute()
-                    #print (result['id'])
-                    print ("Synergyy Todo List found and item added.")
-                    
-                    confirm_card = discord.Embed(colour=discord.Colour.green())
-                    confirm_card.add_field(name= '\u200b', value=f'The task **{todo_item}** from **{ctx.guild.name}** has been added to your Google Tasks.')
-                    await ctx.author.send(content=None, embed=confirm_card)
-                    
-                    break
-
-                else:
-                    print ("Not Synergyy Todo List")
-
-                    if (item == items[-1]):
-                        print("last Item")
-                        tasklist = {
-                            'title': 'Synergyy Todo List'
-                        }
-                            
-                        result = service.tasklists().insert(body=tasklist).execute()
-                        synergyy_list_id = result['id']
-                        print (synergyy_list_id)
-
-                        task = {
-                        'title': todo_item,
-                        'notes': f'Created by Synergyy from {ctx.guild.name}',
-                        }
-                        result = service.tasks().insert(tasklist=synergyy_list_id, body=task).execute()
-                        print (result['id'])
-                        #print ("Synergyy Todo List found and item added.")
-
-                        confirm_card = discord.Embed(colour=discord.Colour.green())
-                        confirm_card.add_field(name= '\u200b', value=f'The task **{todo_item}** from **{ctx.guild.name}** has been added to your Google Tasks.')
-                        await ctx.author.send(content=None, embed=confirm_card)
-
-#-----------------------------------------------------------------
-
 @client.command()
 async def todo(ctx):
     todo_card = discord.Embed(title="\U0001F4CB Todo List", colour=discord.Colour.green())
-    completed_embed = discord.Embed(title='Todo Item Completed!', colour=discord.Colour.green())
+    completed_embed = discord.Embed(title='\U0001F4CB Todo Item Completed!', colour=discord.Colour.green())
 
     #Accessing data
-    db = sqlite3.connect('main.sqlite')
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
+
     cursor = db.cursor()
-    cursor.execute(f"SELECT todo_item FROM todo WHERE guild_id = {ctx.guild.id}")
+    cursor.execute(f"SELECT TODO_ITEM FROM todo WHERE GUILD = {ctx.guild.id}")
     todos = [[todo[0]] for todo in cursor.fetchall()]
 
     for i in range(len(todos)):
@@ -259,16 +181,19 @@ async def todo(ctx):
                     if counts[count] > 1:
                         tb_deleted.append(count)
                 break
-        
+
         #Delete choices
         dtodos = []
         for todo in todos:
             for dl in tb_deleted:
                 if todo[0] == dl:
-                    sql = 'DELETE FROM todo WHERE todo_item=? AND guild_id=?'
-                    val = (todo[1], ctx.guild.id)
-                    cursor.execute(sql, val)
+                    val = (todo[1])
+                    sql_delete_query = 'Delete from todo where todo_item = %s AND todo.guild=%s'
+                    cursor.execute(sql_delete_query, (val, ctx.guild.id,))
+                    rows_deleted = cursor.rowcount
+                    db.commit()
                     dtodos.append(todo[1])
+        
         deleted_todos = "\n".join(f"**{d}** successfully completed!" for d in dtodos)
         if not dtodos:
             todo_opt_missing = discord.Embed(title='No Todo Item Selected!', description="Please try again and select a todo item to complete using the reactions.", colour=discord.Color.green())
@@ -283,7 +208,6 @@ async def todo(ctx):
         todo_card.description = "No current todo items at this time."
         await ctx.send(embed=todo_card)
 
-#------------------------------------------------------------------
 @client.command() #Meeting Creation Command + Reminder
 async def meeting(ctx, *, information):
     info = information.strip().split()
@@ -377,21 +301,6 @@ async def meeting(ctx, *, information):
     data = cursor.fetchone()
     
     if data:
-        # if m_time-now-900 >= 0:
-        #     await asyncio.sleep((m_time-now)-900)
-
-        #     #DM 15 Min Reminder
-        #     _15min_card = discord.Embed(colour = discord.Colour.green())
-        #     _15min_card.add_field(name= "Reminder!", value = f"Your meeting, **{name}** is starting in **15** minutes!\n Head over to your teams server to participate.")
-        #     await ctx.author.send(content=None, embed=_15min_card)
-
-        #     #15 Min Announce
-        #     _15_announce = discord.Embed(colour=discord.Colour.green())
-        #     _15_announce.add_field(name="Reminder!", value =f"The meeting **{name}** will start in **15** minutes!")
-        #     await ctx.send(embed=_15_announce)
-
-        #     await asyncio.sleep(900)
-        
     #Meeting DM Reminder
         rvsp = []
         message = await ctx.channel.fetch_message(confirmation.id)
@@ -439,7 +348,6 @@ async def poll(ctx, *, information): #Poll command
         op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
         
         if len(op) <= 20:
-
             options = {}
             for i in range(len(op)):
                 options[unicode_block[i]] = op[i]
@@ -456,12 +364,9 @@ async def poll(ctx, *, information): #Poll command
             polltimeinminutes *= 60
             await asyncio.sleep(polltimeinminutes)
             message_1 = await ctx.fetch_message(message_1.id)
-
             counts = {react.emoji: react.count for react in message_1.reactions}
             winner = max(options, key=counts.get)
-
             winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
-
             await ctx.send(embed=winner_card)
         
         else:
@@ -820,6 +725,6 @@ def has_date(string, fuzzy=True):
 
     except ValueError:
         return False
-        
+
 #Bot Token Pairing--------------------------------
-client.run(read_token())
+client.run(os.environ['DISCORD_TOKEN'])
