@@ -265,15 +265,28 @@ async def meeting(ctx, *, information):
         else:
             await ctx.send(content=None, embed=format_error)
 
-    #Data Storage
-    db = sqlite3.connect('main.sqlite')
+    #Storing Data
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
     cursor = db.cursor()
-    sql = ("INSERT INTO meetings VALUES(?,?,?,?,?)")
-    val = (ctx.guild.id, ctx.channel.id, name, m_time, None)
-    cursor.execute(sql, val)
+    create_table_query = '''CREATE TABLE IF NOT EXISTS meetings
+          (GUILD bigint      NOT NULL,
+          CHANNEL           bigint    NOT NULL,
+          NAME         TEXT,
+          TIMESTAMP         TIME,); '''
+    
+    cursor.execute(create_table_query)
+    db.commit()
+
+    psql = ("INSERT INTO todo (GUILD, CHANNEL, NAME, TIMESTAMP) VALUES(%s, %s, %s, %s)")
+    val = (ctx.guild.id, ctx.channel.id, name, m_time)
+    cursor.execute(psql, val)
+
     db.commit()
     cursor.close()
-    db.close()
 
     #Create Google Calendar Link
     google_date = datetime.datetime.fromtimestamp(m_time).strftime('%Y%m%d')
@@ -292,12 +305,17 @@ async def meeting(ctx, *, information):
     await confirmation.add_reaction(emoji='✅')
     await asyncio.sleep(m_time-now)
 
-    #Check if event still exists
-    db = sqlite3.connect('main.sqlite')
+    #Accessing data
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
+
     cursor = db.cursor()
-    sql= "SELECT rowid FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?"
-    val = (name, ctx.guild.id, m_time)
-    cursor.execute(sql, val)
+    psql = ("SELECT NAME FROM meetings WHERE GUILD = %s AND NAME = %s AND TIMESTAMP = %s")
+    val = (ctx.guild.id, name, m_time)
+    cursor.execute(psql, val)
     data = cursor.fetchone()
     
     if data:
@@ -321,11 +339,15 @@ async def meeting(ctx, *, information):
         await ctx.send(embed=announce)
 
         #Delete meeting for database
-        db = sqlite3.connect('main.sqlite')
+        db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
+
         cursor = db.cursor()
-        sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
-        val = (name, ctx.guild.id)
-        cursor.execute(sql, val)
+        sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s'
+        cursor.execute(sql_delete_query, (name, ctx.guild.id,))
         db.commit()
         cursor.close()
         db.close()
@@ -378,11 +400,16 @@ async def list(ctx): #List command that lists all upcoming meetings
     meetings_embed = discord.Embed(title="\U0001F4CB Upcoming Meetings", colour=discord.Colour.green())
 
     #Accessing data
-    db = sqlite3.connect('main.sqlite')
+    db = psycopg2.connect(user = "postgres",
+                                  password = "online@1",
+                                  host = "127.0.0.1",
+                                  port = "5432",
+                                  database = "data_bot")
+
     cursor = db.cursor()
-    cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
+    cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
     meetings = [[meeting[0]] for meeting in cursor.fetchall()]
-    cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
+    cursor.execute(f"SELECT TIMESTAMP FROM meetings WHERE guild_id = {ctx.guild.id}")
     i = 0
     for meeting_time in cursor.fetchall():
         meetings[i].append(meeting_time[0])
@@ -421,21 +448,28 @@ async def delete(ctx, *, name=None):
         gt_10 = False
 
         #Accessing data
-        db = sqlite3.connect('main.sqlite')
+        db = psycopg2.connect(user = "postgres",
+                                    password = "online@1",
+                                    host = "127.0.0.1",
+                                    port = "5432",
+                                    database = "data_bot")
+
         cursor = db.cursor()
-        sql = "SELECT meeting_name FROM meetings WHERE meeting_name=? AND guild_id=?"
-        val = (name, ctx.guild.id)
-        cursor.execute(sql, val)
+        psql = ("SELECT NAME FROM meetings WHERE GUILD = %s AND NAME = %s")
+        val = (ctx.guild.id, name)
+        cursor.execute(psql, val)
         meetings = [[meeting[0]] for meeting in cursor.fetchall()]
 
         #If there is only one meeting with entered name
         if len(meetings) == 1:
-            sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=?'
-            val = (name, ctx.guild.id)
-            cursor.execute(sql, val)
+
+            #Delete meeting for database
+            sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s'
+            cursor.execute(sql_delete_query, (name, ctx.guild.id,))
             db.commit()
             cursor.close()
             db.close()
+
             deleted_embed.add_field(name='Meeting Deleted:', value=f'>>> {name} successfully deleted')
             await ctx.send(embed=deleted_embed)
             return
@@ -451,9 +485,10 @@ async def delete(ctx, *, name=None):
             return
 
         #Getting Meeting time to display
-        sql = "SELECT meeting_time FROM meetings WHERE meeting_name=? AND guild_id=?"
-        val = (name, ctx.guild.id)
-        cursor.execute(sql, val)
+
+        psql = ("SELECT TIMESTAMP FROM meetings WHERE GUILD = %s AND NAME = %s")
+        val = (ctx.guild.id, name)
+        cursor.execute(psql, val)
         i = 0
         for meeting_time in cursor.fetchall():
             meetings[i].append(meeting_time[0])
@@ -499,9 +534,9 @@ async def delete(ctx, *, name=None):
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
-                    sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
-                    val = (meeting[1], ctx.guild.id, meeting[2])
-                    cursor.execute(sql, val)
+                    sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s AND TIMESTAMP = %s'
+                    cursor.execute(sql_delete_query, (meeting[1], ctx.guild.id, meeting[2]))
+                    db.commit()
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
 
@@ -520,9 +555,14 @@ async def delete(ctx, *, name=None):
         gt_10 = False
 
         #Accessing data
-        db = sqlite3.connect('main.sqlite')
+        db = psycopg2.connect(user = "postgres",
+                                    password = "online@1",
+                                    host = "127.0.0.1",
+                                    port = "5432",
+                                    database = "data_bot")
+
         cursor = db.cursor()
-        cursor.execute(f"SELECT meeting_name FROM meetings WHERE guild_id = {ctx.guild.id}")
+        cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
         meetings = [[meeting[0]] for meeting in cursor.fetchall()]
 
         if len(meetings) > 10:
@@ -534,7 +574,7 @@ async def delete(ctx, *, name=None):
             return
 
         #Getting Meeting time to display
-        cursor.execute(f"SELECT meeting_time FROM meetings WHERE guild_id = {ctx.guild.id}")
+        cursor.execute(f"SELECT TIMESTAMP FROM meetings WHERE GUILD = {ctx.guild.id}")
         i = 0
         for meeting_time in cursor.fetchall():
             meetings[i].append(meeting_time[0])
@@ -579,9 +619,8 @@ async def delete(ctx, *, name=None):
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
-                    sql = 'DELETE FROM meetings WHERE meeting_name=? AND guild_id=? AND meeting_time=?'
-                    val = (meeting[1], ctx.guild.id, meeting[2])
-                    cursor.execute(sql, val)
+                    sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s AND TIMESTAMP = %s'
+                    cursor.execute(sql_delete_query, (meeting[1], ctx.guild.id, meeting[2]))
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
         deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
@@ -727,4 +766,4 @@ def has_date(string, fuzzy=True):
         return False
 
 #Bot Token Pairing--------------------------------
-client.run(os.environ['DISCORD_TOKEN'])
+client.run(read_token())
