@@ -6,3 +6,4 @@ pytz
 word2number
 python-dateutil
 discord-timers
+Psycopg2
