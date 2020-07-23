@@ -82,16 +82,16 @@ async def _8ball(ctx, *, question):
     _8ball_card = discord.Embed(colour = discord.Colour.green(), description = f"**Question:** {question}\n**Answer:** {random.choice(responses)}")
     await ctx.send(embed=_8ball_card)
     
-@client.command
+@client.command()
 async def pog(ctx):
     pog_card = discord.Embed(colour = discord.Colour.green())
-    pog_card.set_image(url="https://cdn.discordapp.com/attachments/717853456244670509/720344286650040370/PogChamp.png")
+    pog_card.set_image(url="https://i.ibb.co/YjDt67q/Screen-Shot-2020-07-23-at-2-41-30-PM.png")
     await ctx.send(embed=pog_card)
 
-@client.command
+@client.command()
 async def f(ctx):
     f_card = discord.Embed(colour = discord.Colour.green())
-    f_card.set_image(url="https://cdn.discordapp.com/attachments/717853456244670509/720345633734787512/pressf.jpg")
+    f_card.set_image(url="https://i.ibb.co/ZxTTJHb/f.jpg")
     await ctx.send(embed=f_card)
 
 @client.command()
@@ -117,11 +117,11 @@ async def addtodo(ctx, *, todo_item):
     await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
-    db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
+                                  database = os.environ['DB'])
     cursor = db.cursor()
     create_table_query = '''CREATE TABLE IF NOT EXISTS todo
           (GUILD bigint      NOT NULL,
@@ -145,11 +145,11 @@ async def todo(ctx):
     completed_embed = discord.Embed(title='\U0001F4CB Todo Item Completed!', colour=discord.Colour.green())
 
     #Accessing data
-    db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
+                                  database = os.environ['DB'])
 
     cursor = db.cursor()
     cursor.execute(f"SELECT TODO_ITEM FROM todo WHERE GUILD = {ctx.guild.id}")
@@ -265,28 +265,37 @@ async def meeting(ctx, *, information):
         else:
             await ctx.send(content=None, embed=format_error)
 
-    #Storing Data
-    db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+    try:
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
-    cursor = db.cursor()
-    create_table_query = '''CREATE TABLE IF NOT EXISTS meetings
-          (GUILD bigint      NOT NULL,
-          CHANNEL           bigint    NOT NULL,
-          NAME         TEXT,
-          TIMESTAMP         TIME,); '''
-    
-    cursor.execute(create_table_query)
-    db.commit()
+                                  database = os.environ['DB'])
+        cursor = db.cursor()
+        create_table_query = '''CREATE TABLE IF NOT EXISTS meetings
+            (GUILD bigint      NOT NULL,
+            CHANNEL           bigint    NOT NULL,
+            NAME         TEXT, 
+            TIME         DOUBLE PRECISION); '''
+        
+        cursor.execute(create_table_query)
+        db.commit()
 
-    psql = ("INSERT INTO todo (GUILD, CHANNEL, NAME, TIMESTAMP) VALUES(%s, %s, %s, %s)")
-    val = (ctx.guild.id, ctx.channel.id, name, m_time)
-    cursor.execute(psql, val)
+        psql = ("INSERT INTO meetings (GUILD, CHANNEL, NAME, TIME) VALUES(%s, %s, %s, %s)")
+        val = (ctx.guild.id, ctx.channel.id, name, m_time)
+        cursor.execute(psql, val)
+        print("Item Inserted")
+        
+    except(Exception, psycopg2.Error) as error :
+        print ("Error while fetching data from PostgreSQL", error)
 
-    db.commit()
-    cursor.close()
+    finally:
+    #closing database connection.
+        if(db):
+            db.commit()
+            cursor.close()
+            db.close()
+            print("PostgreSQL connection is closed")
 
     #Create Google Calendar Link
     google_date = datetime.datetime.fromtimestamp(m_time).strftime('%Y%m%d')
@@ -300,23 +309,23 @@ async def meeting(ctx, *, information):
     #Meeting Confirmation
     meeting_card = discord.Embed(title=f"\U0001F5D3 Meeting Created: {name}", url=google_link, colour=discord.Colour.green())
     meeting_card.add_field(name="Meeting Time", value=f"{time} on {date}")
-    meeting_card.set_footer(text="Tip: I will remind you about this meeting when its starting!\nTip: Click the title to add this event to Google Calendar!")
+    meeting_card.set_footer(text="Tip: Click the check mark below to opt-in to DM reminders for this meeting!\nTip: Click the title to add this event to Google Calendar!")
     confirmation = await ctx.send(content=None, embed=meeting_card)
     await confirmation.add_reaction(emoji='✅')
     await asyncio.sleep(m_time-now)
 
-    #Accessing data
-    db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+    #Check if event still exists
+
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
+                                  database = os.environ['DB'])
 
     cursor = db.cursor()
-    psql = ("SELECT NAME FROM meetings WHERE GUILD = %s AND NAME = %s AND TIMESTAMP = %s")
-    val = (ctx.guild.id, name, m_time)
-    cursor.execute(psql, val)
+    cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id} AND TIME = {m_time}")
     data = cursor.fetchone()
+    print(data)
     
     if data:
     #Meeting DM Reminder
@@ -338,89 +347,61 @@ async def meeting(ctx, *, information):
         announce.set_author(name=f"\U00002755 Attention! The meeting \"{name}\" is starting now.")
         await ctx.send(embed=announce)
 
-        #Delete meeting for database
-        db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
-
+                                  database = os.environ['DB'])
         cursor = db.cursor()
-        sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s'
-        cursor.execute(sql_delete_query, (name, ctx.guild.id,))
+        val = str(name)
+        sql_delete_query = 'Delete from meetings where name= %s AND guild=%s'
+        cursor.execute(sql_delete_query, (val, ctx.guild.id,))
+
         db.commit()
         cursor.close()
         db.close()
 
 @client.command()
-async def poll(ctx, *, information): #Poll command
-    if '\"' in information and ',' in information and information[len(information)-1].isnumeric():
-        op = []
-        polltimeinminutes = 0
-        title = information[information.index('\"')+1 : information.rindex('\"')]
-        temp = information.rindex('\"')
-        for i in range(information.rindex('\"')+1, len(information)):
-            if information[i] == ',':
-                op.append(information[temp+1:i].strip())
-                temp = i
-        for j in reversed(information):
-            if not j.isnumeric():
-                polltimeinminutes = int(information[information.rindex(j)+1:].strip())
-                break
-        op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
-        
-        if len(op) <= 20:
-            options = {}
-            for i in range(len(op)):
-                options[unicode_block[i]] = op[i]
-            
-            vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green()) 
-            value = "\n".join("{} - {}".format(*item) for item in options.items())
-            vote.add_field(name="Options:", value=value, inline=False) 
-            vote.set_footer(text="Time to vote: %s minute.\nUse the reactions below to vote." % (polltimeinminutes))
-
-            message_1 = await ctx.send(embed=vote)
-            for choice in options:
-                await message_1.add_reaction(emoji=choice)
-
-            polltimeinminutes *= 60
-            await asyncio.sleep(polltimeinminutes)
-            message_1 = await ctx.fetch_message(message_1.id)
-            counts = {react.emoji: react.count for react in message_1.reactions}
-            winner = max(options, key=counts.get)
-            winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
-            await ctx.send(embed=winner_card)
-        
-        else:
-            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
-            await ctx.send(embed=too_many_options)
-
-@client.command()
 async def list(ctx): #List command that lists all upcoming meetings
     meetings_embed = discord.Embed(title="\U0001F4CB Upcoming Meetings", colour=discord.Colour.green())
 
-    #Accessing data
-    db = psycopg2.connect(user = "postgres",
-                                  password = "online@1",
-                                  host = "127.0.0.1",
+    try:
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "data_bot")
+                                  database = os.environ['DB'])
 
-    cursor = db.cursor()
-    cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
-    meetings = [[meeting[0]] for meeting in cursor.fetchall()]
-    cursor.execute(f"SELECT TIMESTAMP FROM meetings WHERE guild_id = {ctx.guild.id}")
-    i = 0
-    for meeting_time in cursor.fetchall():
-        meetings[i].append(meeting_time[0])
-        i += 1
-    meetings.sort(key=itemgetter(1))
+        cursor = db.cursor()
+        cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
+        meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+        print(meetings)
+        cursor.execute(f"SELECT TIME FROM meetings WHERE GUILD = {ctx.guild.id}")
+
+        i = 0
+        for meeting_time in cursor.fetchall():
+            meetings[i].append(meeting_time[0])
+            i += 1
+        meetings.sort(key=itemgetter(1))
+        print("Meetings created")
     
+    except (Exception, psycopg2.Error) as error :
+        print ("Error while fetching data from PostgreSQL", error)
+    
+    finally:
+    #closing database connection.
+        if(db):
+            db.commit()
+            cursor.close()
+            db.close()
+            print("PostgreSQL connection is closed")
+        
     #Converting data
     if meetings:
         today = []
         week = []
         future = []
+        print("1")
         for i in range(len(meetings)):
             date = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%A, %b %-d, %Y')
             time = datetime.datetime.fromtimestamp(int(meetings[i][1])).strftime('%-I:%M%p')
@@ -446,26 +427,26 @@ async def delete(ctx, *, name=None):
     deleted_embed = discord.Embed(title='Delete Meeting', colour=discord.Colour.green())
     if name:
         gt_10 = False
-
-        #Accessing data
-        db = psycopg2.connect(user = "postgres",
-                                    password = "online@1",
-                                    host = "127.0.0.1",
-                                    port = "5432",
-                                    database = "data_bot")
+       
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
+                                  port = "5432",
+                                  database = os.environ['DB'])
 
         cursor = db.cursor()
-        psql = ("SELECT NAME FROM meetings WHERE GUILD = %s AND NAME = %s")
+        sql = ("SELECT NAME FROM meetings WHERE GUILD=%s and NAME=%s")
         val = (ctx.guild.id, name)
-        cursor.execute(psql, val)
+        cursor.execute(sql, val)
         meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+        print(meetings)
 
         #If there is only one meeting with entered name
         if len(meetings) == 1:
+            sql = ('DELETE FROM meetings WHERE meetings.NAME=%s AND GUILD=%s')
+            val = (name, ctx.guild.id)
+            cursor.execute(sql, val)
 
-            #Delete meeting for database
-            sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s'
-            cursor.execute(sql_delete_query, (name, ctx.guild.id,))
             db.commit()
             cursor.close()
             db.close()
@@ -480,15 +461,14 @@ async def delete(ctx, *, name=None):
             gt_10 = True
 
         elif len(meetings) == 0:
-            no_option = discord.Embed(title='Meeting Not Found', description='>>> No meetings found with that name.', colour=discord.Colour.green())
+            no_option = discord.Embed(title='Meeting Not Found', description='>>> No meetings found with that name.\nTry using !meeting to create a new meeting.', colour=discord.Colour.green())
             await ctx.send(embed=no_option)
             return
 
-        #Getting Meeting time to display
+        sql = ("SELECT TIME FROM meetings WHERE meetings.NAME=%s AND GUILD=%s")
+        val = (name, ctx.guild.id)
+        cursor.execute(sql, val)
 
-        psql = ("SELECT TIMESTAMP FROM meetings WHERE GUILD = %s AND NAME = %s")
-        val = (ctx.guild.id, name)
-        cursor.execute(psql, val)
         i = 0
         for meeting_time in cursor.fetchall():
             meetings[i].append(meeting_time[0])
@@ -534,9 +514,9 @@ async def delete(ctx, *, name=None):
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
-                    sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s AND TIMESTAMP = %s'
-                    cursor.execute(sql_delete_query, (meeting[1], ctx.guild.id, meeting[2]))
-                    db.commit()
+                    sql=('DELETE FROM meetings WHERE meetings.NAME=%s AND GUILD=%s AND TIME=%s')
+                    val = (meeting[1], ctx.guild.id, meeting[2])
+                    cursor.execute(sql, val)
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
 
@@ -554,27 +534,35 @@ async def delete(ctx, *, name=None):
     else:
         gt_10 = False
 
-        #Accessing data
-        db = psycopg2.connect(user = "postgres",
-                                    password = "online@1",
-                                    host = "127.0.0.1",
-                                    port = "5432",
-                                    database = "data_bot")
+        try:
+            db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
+                                  port = "5432",
+                                  database = os.environ['DB'])
 
-        cursor = db.cursor()
-        cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
-        meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+            cursor = db.cursor()
+            cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
+            meetings = [[meeting[0]] for meeting in cursor.fetchall()]
+            print(meetings)
+        
+        except (Exception, psycopg2.Error) as error :
+            print ("Error while fetching data from PostgreSQL", error)
+        
+        finally:
+        #closing database connection.
+            print("Finally")
 
         if len(meetings) > 10:
             meetings = meetings[:10]
             gt_10 = True
         elif len(meetings) == 0:
-            no_option = discord.Embed(title='Meeting Not Found', description='>>> No meetings found.', colour=discord.Colour.green())
+            no_option = discord.Embed(title='No Meetings', description='>>> No meetings found.\nTry using !meeting to create a new meeting.', colour=discord.Colour.green())
             await ctx.send(embed=no_option)
             return
 
         #Getting Meeting time to display
-        cursor.execute(f"SELECT TIMESTAMP FROM meetings WHERE GUILD = {ctx.guild.id}")
+        cursor.execute(f"SELECT TIME FROM meetings WHERE GUILD = {ctx.guild.id}")
         i = 0
         for meeting_time in cursor.fetchall():
             meetings[i].append(meeting_time[0])
@@ -619,8 +607,9 @@ async def delete(ctx, *, name=None):
         for meeting in meetings:
             for dl in tb_deleted:
                 if meeting[0] == dl:
-                    sql_delete_query = 'Delete from meetings where NAME = %s AND meetings.guild=%s AND TIMESTAMP = %s'
-                    cursor.execute(sql_delete_query, (meeting[1], ctx.guild.id, meeting[2]))
+                    sql = 'DELETE FROM meetings WHERE meetings.name=%s AND GUILD=%s AND TIME=%s'
+                    val = (meeting[1], ctx.guild.id, meeting[2])
+                    cursor.execute(sql, val)
                     dmeetings.append(meeting[1])
         deleted_meetings = "\n".join(f"**{d}** successfully deleted" for d in dmeetings)
         deleted_embed.add_field(name='\u200b', value='>>> ' + deleted_meetings, inline=False)
@@ -629,6 +618,49 @@ async def delete(ctx, *, name=None):
         cursor.close()
         db.close()
         await ctx.send(embed=deleted_embed)
+
+@client.command()
+async def poll(ctx, *, information): #Poll command
+    if '\"' in information and ',' in information and information[len(information)-1].isnumeric():
+        op = []
+        polltimeinminutes = 0
+        title = information[information.index('\"')+1 : information.rindex('\"')]
+        temp = information.rindex('\"')
+        for i in range(information.rindex('\"')+1, len(information)):
+            if information[i] == ',':
+                op.append(information[temp+1:i].strip())
+                temp = i
+        for j in reversed(information):
+            if not j.isnumeric():
+                polltimeinminutes = int(information[information.rindex(j)+1:].strip())
+                break
+        op.append(information[temp+1 : information.rindex(str(polltimeinminutes))].strip())
+        
+        if len(op) <= 20:
+            options = {}
+            for i in range(len(op)):
+                options[unicode_block[i]] = op[i]
+            
+            vote = discord.Embed(title=f"\U0001F4F6 {title}", color=discord.Colour.green()) 
+            value = "\n".join("{} - {}".format(*item) for item in options.items())
+            vote.add_field(name="Options:", value=value, inline=False) 
+            vote.set_footer(text="Time to vote: %s minute.\nUse the reactions below to vote." % (polltimeinminutes))
+
+            message_1 = await ctx.send(embed=vote)
+            for choice in options:
+                await message_1.add_reaction(emoji=choice)
+
+            polltimeinminutes *= 60
+            await asyncio.sleep(polltimeinminutes)
+            message_1 = await ctx.fetch_message(message_1.id)
+            counts = {react.emoji: react.count for react in message_1.reactions}
+            winner = max(options, key=counts.get)
+            winner_card = discord.Embed(color=discord.Colour.green(), description= "\U00002B50 The winner of the poll **%s** is **%s**!" % (title, options[winner]))
+            await ctx.send(embed=winner_card)
+        
+        else:
+            too_many_options = discord.Embed(title="Too many options!", description="The limit for !poll is 20 options.", color=discord.Colour.green())
+            await ctx.send(embed=too_many_options)
 
 @client.command()
 async def timenow(ctx):
@@ -714,7 +746,7 @@ async def _8ball_error(ctx, error):
 @meeting.error
 async def meeting_error(ctx, error):
     time_missing = discord.Embed(title='Missing Meeting Time!', description="For further help, please refer to !help", colour=discord.Color.green())
-    format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting "Physics Project" in 2 hours', colour=discord.Color.green())
+    format_error = discord.Embed(title='Format Error!', description='Please put the name in quotations:\neg. !meeting "Physics Project" in 2 hours\nFor more help, refer to !help', colour=discord.Color.green())
     if isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(content=None, embed=time_missing)
     else:
