@@ -117,11 +117,11 @@ async def addtodo(ctx, *, todo_item):
     await ctx.send(embed=todo_add_card)
 
     #Storing Todo Data
-    db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
     cursor = db.cursor()
     create_table_query = '''CREATE TABLE IF NOT EXISTS todo
           (GUILD bigint      NOT NULL,
@@ -145,11 +145,11 @@ async def todo(ctx):
     completed_embed = discord.Embed(title='\U0001F4CB Todo Item Completed!', colour=discord.Colour.green())
 
     #Accessing data
-    db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
 
     cursor = db.cursor()
     cursor.execute(f"SELECT TODO_ITEM FROM todo WHERE GUILD = {ctx.guild.id}")
@@ -266,11 +266,11 @@ async def meeting(ctx, *, information):
             await ctx.send(content=None, embed=format_error)
 
     try:
-        db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
         cursor = db.cursor()
         create_table_query = '''CREATE TABLE IF NOT EXISTS meetings
             (GUILD bigint      NOT NULL,
@@ -316,11 +316,11 @@ async def meeting(ctx, *, information):
 
     #Check if event still exists
 
-    db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+    db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
 
     cursor = db.cursor()
     cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id} AND TIME = {m_time}")
@@ -348,11 +348,11 @@ async def meeting(ctx, *, information):
         await ctx.send(embed=announce)
 
         #Delete meeting for database
-        db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
         cursor = db.cursor()
         val = str(name)
         sql_delete_query = 'Delete from meetings where name= %s AND guild=%s'
@@ -367,11 +367,11 @@ async def list(ctx): #List command that lists all upcoming meetings
 
     #Accessing data
     try:
-        db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
 
         cursor = db.cursor()
         cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
@@ -430,11 +430,11 @@ async def delete(ctx, *, name=None):
         gt_10 = False
 
         #Accessing data
-        db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+        db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
 
         cursor = db.cursor()
         sql = ("SELECT NAME FROM meetings WHERE GUILD=%s and NAME=%s")
@@ -535,11 +535,11 @@ async def delete(ctx, *, name=None):
         gt_10 = False
 
         try:
-            db = psycopg2.connect(user = "flrzcnyjhmpvvu",
-                                  password = "be19f191415e1bbb3b6c9bb689d4e1045103aada78955609ef3f5dfefc338f7b",
-                                  host = "ec2-3-208-50-226.compute-1.amazonaws.com",
+            db = psycopg2.connect(user = os.environ['DB_USER'],
+                                  password = os.environ['DB_PASS'],
+                                  host = os.environ['DB_HOST'],
                                   port = "5432",
-                                  database = "d74uc561mnfa7b")
+                                  database = os.environ['DB'])
 
             cursor = db.cursor()
             cursor.execute(f"SELECT NAME FROM meetings WHERE GUILD = {ctx.guild.id}")
