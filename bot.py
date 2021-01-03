@@ -721,6 +721,16 @@ async def timenow(ctx):
     currenttime_card.set_footer(text="Tip: UTC and GMT are interchangable.")
     await ctx.send(embed=currenttime_card)
 
+@client.command(pass_context=True)
+async def botservers(ctx):
+    await ctx.send("I'm in " + str(len(client.guilds)) + " servers")
+
+@client.command(pass_context=True)
+async def listservers(ctx):
+    async for guild in client.fetch_guilds(limit=150):
+        print(guild.name)
+
+
 #Command Specific Error Handling--------------------------
 
 @clear.error
