@@ -727,8 +727,16 @@ async def botservers(ctx):
 
 @client.command(pass_context=True)
 async def listservers(ctx):
+    print("List of Servers:")
     async for guild in client.fetch_guilds(limit=150):
         print(guild.name)
+
+@client.command(pass_context=True)
+async def botusers(ctx):
+    users = 0
+    for guild in client.guilds:
+        users += guild.member_count
+    print("Total Users:", users)
 
 
 #Command Specific Error Handling--------------------------
