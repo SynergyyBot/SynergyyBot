@@ -7,4 +7,3 @@ word2number
 python-dateutil
 discord-timers
 Psycopg2
-python==3.8
